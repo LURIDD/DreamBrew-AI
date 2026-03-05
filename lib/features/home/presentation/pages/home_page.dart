@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/feature_card.dart';
@@ -98,7 +100,7 @@ class _HomeView extends StatelessWidget {
                   // Rüya Yorumu Kartı
                   FeatureCard.dream(
                     onTap: () {
-                      // TODO: Rüya yorumu ekranına git
+                      context.push(AppRouter.dreamInput);
                     },
                   ),
                   const SizedBox(height: 16),
