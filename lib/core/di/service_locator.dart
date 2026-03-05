@@ -18,6 +18,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/dream/data/repositories/mock_dream_repository.dart';
 import '../../features/dream/domain/repositories/i_dream_repository.dart';
+import '../../features/dream/presentation/bloc/dream_bloc.dart';
 import '../../features/fortune/data/repositories/mock_fortune_repository.dart';
 import '../../features/fortune/domain/repositories/i_fortune_repository.dart';
 
@@ -53,6 +54,9 @@ Future<void> setupLocator() async {
   // Rüya yorumu repository'si.
   // Gerçek LLM entegrasyonuna kadar mock kullanılır.
   sl.registerLazySingleton<IDreamRepository>(() => MockDreamRepository());
+
+  // DreamBloc — her ekran için yeni bir BLoC örneği oluşturulmalıdır
+  sl.registerFactory<DreamBloc>(() => DreamBloc(sl<IDreamRepository>()));
 
   // ─── Fortune Feature ─────────────────────────────────────────────────────
   //
