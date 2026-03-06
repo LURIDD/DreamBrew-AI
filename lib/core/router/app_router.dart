@@ -3,6 +3,9 @@ import '../../features/dream/domain/entities/dream_reading.dart';
 import '../../features/dream/presentation/pages/dream_input_page.dart';
 import '../../features/dream/presentation/pages/dream_result_page.dart';
 import '../../features/dream/presentation/pages/dream_art_page.dart';
+import '../../features/fortune/domain/entities/fortune_reading.dart';
+import '../../features/fortune/presentation/pages/fortune_upload_page.dart';
+import '../../features/fortune/presentation/pages/fortune_result_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
@@ -17,6 +20,8 @@ class AppRouter {
   static const String dreamInput = '/dream-input';
   static const String dreamResult = '/dream-result';
   static const String dreamArt = '/dream-art';
+  static const String fortuneUpload = '/fortune-upload';
+  static const String fortuneResult = '/fortune-result';
 
   /// Uygulamanın tek GoRouter örneği
   static final GoRouter router = GoRouter(
@@ -57,6 +62,22 @@ class AppRouter {
           // DreamReading opsiyonel olarak gelebilir
           final reading = state.extra as DreamReading?;
           return DreamArtPage(reading: reading);
+        },
+      ),
+
+      // ─── Fortune Feature Rotaları ──────────────────────────────
+      GoRoute(
+        path: fortuneUpload,
+        name: 'fortuneUpload',
+        builder: (context, state) => const FortuneUploadPage(),
+      ),
+      GoRoute(
+        path: fortuneResult,
+        name: 'fortuneResult',
+        builder: (context, state) {
+          // FortuneReading objesini extra parametresi olarak al
+          final reading = state.extra as FortuneReading;
+          return FortuneResultPage(reading: reading);
         },
       ),
     ],
