@@ -27,7 +27,6 @@ class DreamResultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: _buildBottomNavBar(context),
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -390,50 +389,6 @@ class DreamResultPage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  /// Alt navigasyon çubuğu — Home, Readings, Profile
-  Widget _buildBottomNavBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.home_filled, 'Home', false),
-              _navItem(Icons.menu_book, 'Readings', true),
-              _navItem(Icons.person_outline, 'Profile', false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool isSelected) {
-    final color = isSelected ? AppColors.primary : AppColors.textHint;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(color: color, fontSize: 11),
-        ),
-      ],
     );
   }
 }

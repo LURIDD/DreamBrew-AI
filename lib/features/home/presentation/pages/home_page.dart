@@ -1,3 +1,10 @@
+/// DreamBrew AI — Ana Sayfa (Home Dashboard)
+///
+/// Rüya Yorumu ve Kahve Falı giriş kartlarını içerir.
+/// MainLayout (ShellRoute) tarafından sarıldığı için
+/// kendi BottomNavigationBar'ı yoktur.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,9 +39,7 @@ class _HomeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
 
-      // Alt navigasyon çubuğu
-      bottomNavigationBar: _BottomNavBar(),
-
+      // BottomNavigationBar artık MainLayout'ta (ShellRoute)
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -69,11 +74,11 @@ class _HomeView extends StatelessWidget {
                 ),
               ),
               actions: [
-                // Geçmiş ikonu — tıklanınca History ekranına git
+                // Geçmiş ikonu — tıklanınca History sekmesine geç
                 Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: GestureDetector(
-                    onTap: () => context.push(AppRouter.history),
+                    onTap: () => context.go(AppRouter.history),
                     child: const Icon(
                       Icons.history,
                       color: AppColors.textSecondary,
@@ -111,7 +116,7 @@ class _HomeView extends StatelessWidget {
                   // Kahve Falı Kartı
                   FeatureCard.fortune(
                     onTap: () {
-                      // TODO: Kahve falı ekranına git
+                      context.push(AppRouter.fortuneUpload);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -121,122 +126,6 @@ class _HomeView extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ============================================================
-// Alt Navigasyon Çubuğu
-// ============================================================
-
-/// Merkezdeki artı (+) FAB ile birlikte Home ve Settings sekmeleri
-class _BottomNavBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SizedBox(
-        height: 72,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Home sekmesi
-            _NavBarItem(
-              icon: Icons.home_filled,
-              label: 'Home',
-              isSelected: true,
-            ),
-            // Interpret sekmesi
-            GestureDetector(
-              onTap: () => context.push(AppRouter.dreamInput),
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppColors.primaryButtonGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.5),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    Text(
-                      'Interpret',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white,
-                        fontSize: 8,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // History sekmesi
-            GestureDetector(
-              onTap: () => context.push(AppRouter.history),
-              child: _NavBarItem(
-                icon: Icons.history,
-                label: 'History',
-                isSelected: false,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Navigasyon çubuğu tek sekme öğesi
-class _NavBarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-
-  const _NavBarItem({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.textHint;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 26),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: color,
-            letterSpacing: 0.3,
-            fontSize: 12,
-          ),
-        ),
-      ],
     );
   }
 }

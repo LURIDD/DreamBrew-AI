@@ -27,7 +27,6 @@ class DreamArtPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: _buildBottomNavBar(context),
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -277,51 +276,6 @@ class DreamArtPage extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-    );
-  }
-
-  /// Alt navigasyon çubuğu — Home, Dreams, Coffee, Profile
-  Widget _buildBottomNavBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.home_filled, 'Home', false),
-              _navItem(Icons.nightlight_round, 'Dreams', true),
-              _navItem(Icons.coffee, 'Coffee', false),
-              _navItem(Icons.person_outline, 'Profile', false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool isSelected) {
-    final color = isSelected ? AppColors.primary : AppColors.textHint;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(color: color, fontSize: 11),
-        ),
-      ],
     );
   }
 }
