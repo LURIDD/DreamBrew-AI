@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'core/local_storage/saved_reading.dart';
+import 'core/local_storage/saved_reading_adapter.dart';
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -7,6 +10,11 @@ import 'core/theme/app_theme.dart';
 /// DreamBrew AI — Uygulama giriş noktası
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Hive yerel veritabanını başlat
+  await Hive.initFlutter();
+  Hive.registerAdapter(SavedReadingAdapter());
+  await Hive.openBox<SavedReading>('saved_readings');
 
   // Dependency Injection: tüm repository ve servisleri kaydet
   await setupLocator();

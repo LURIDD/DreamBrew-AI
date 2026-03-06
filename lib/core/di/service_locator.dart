@@ -22,6 +22,10 @@ import '../../features/dream/presentation/bloc/dream_bloc.dart';
 import '../../features/fortune/data/repositories/mock_fortune_repository.dart';
 import '../../features/fortune/domain/repositories/i_fortune_repository.dart';
 import '../../features/fortune/presentation/bloc/fortune_bloc.dart';
+import '../local_storage/hive_service.dart';
+import '../../features/history/data/repositories/hive_history_repository.dart';
+import '../../features/history/domain/repositories/i_history_repository.dart';
+import '../../features/history/presentation/bloc/history_bloc.dart';
 
 /// Global service locator örneği.
 ///
@@ -67,4 +71,19 @@ Future<void> setupLocator() async {
 
   // FortuneBloc — her ekran için yeni bir BLoC örneği oluşturulmalıdır
   sl.registerFactory<FortuneBloc>(() => FortuneBloc(sl<IFortuneRepository>()));
+
+  // ─── History Feature ────────────────────────────────────────────────────
+  //
+  // Hive servisini singleton olarak kaydet (box zaten main'de açıldı)
+  final hiveService = HiveService();
+  await hiveService.init();
+  sl.registerLazySingleton<HiveService>(() => hiveService);
+
+  // Geçmiş repository'si — Hive implementasyonu
+  sl.registerLazySingleton<IHistoryRepository>(
+    () => HiveHistoryRepository(sl<HiveService>()),
+  );
+
+  // HistoryBloc — her ekran için yeni bir BLoC örneği
+  sl.registerFactory<HistoryBloc>(() => HistoryBloc(sl<IHistoryRepository>()));
 }

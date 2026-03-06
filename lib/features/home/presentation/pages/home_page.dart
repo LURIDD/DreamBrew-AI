@@ -68,14 +68,17 @@ class _HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-              actions: const [
-                // Geçmiş ikonu
+              actions: [
+                // Geçmiş ikonu — tıklanınca History ekranına git
                 Padding(
-                  padding: EdgeInsets.only(right: 16),
-                  child: Icon(
-                    Icons.history,
-                    color: AppColors.textSecondary,
-                    size: 24,
+                  padding: const EdgeInsets.only(right: 16),
+                  child: GestureDetector(
+                    onTap: () => context.push(AppRouter.history),
+                    child: const Icon(
+                      Icons.history,
+                      color: AppColors.textSecondary,
+                      size: 24,
+                    ),
                   ),
                 ),
               ],
@@ -142,34 +145,58 @@ class _BottomNavBar extends StatelessWidget {
       ),
       child: SizedBox(
         height: 72,
-        child: Stack(
-          alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            // Sol: Home sekmesi
-            Positioned(
-              left: 0,
-              bottom: 0,
-              top: 0,
-              width: MediaQuery.of(context).size.width / 2 - 36,
-              child: _NavBarItem(
-                icon: Icons.home_filled,
-                label: 'Home',
-                isSelected: true,
+            // Home sekmesi
+            _NavBarItem(
+              icon: Icons.home_filled,
+              label: 'Home',
+              isSelected: true,
+            ),
+            // Interpret sekmesi
+            GestureDetector(
+              onTap: () => context.push(AppRouter.dreamInput),
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryButtonGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.5),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    Text(
+                      'Interpret',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontSize: 8,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            // Merkez: Büyük mor artı butonu
-            Positioned(top: 0, child: _CenterFab()),
-
-            // Sağ: Settings sekmesi
-            Positioned(
-              right: 0,
-              bottom: 0,
-              top: 0,
-              width: MediaQuery.of(context).size.width / 2 - 36,
+            // History sekmesi
+            GestureDetector(
+              onTap: () => context.push(AppRouter.history),
               child: _NavBarItem(
-                icon: Icons.settings_outlined,
-                label: 'Settings',
+                icon: Icons.history,
+                label: 'History',
                 isSelected: false,
               ),
             ),
@@ -210,29 +237,6 @@ class _NavBarItem extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Ortadaki büyük mor yuvarlak artı (+) butonu
-class _CenterFab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: AppColors.primaryButtonGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.5),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Icon(Icons.add, color: Colors.white, size: 30),
     );
   }
 }
