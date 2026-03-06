@@ -1,3 +1,11 @@
+/// DreamBrew AI — Uygulama Yönlendirme Yapılandırması
+///
+/// go_router + ShellRoute ile sekme tabanlı navigasyon.
+/// Ana sekmeler (Home, History) → MainLayout içinde kalır.
+/// Dream/Fortune/Detail ekranları → ShellRoute dışında, navbar olmadan açılır.
+library;
+
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/dream/domain/entities/dream_reading.dart';
 import '../../features/dream/presentation/pages/dream_input_page.dart';
@@ -11,9 +19,10 @@ import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/history/presentation/pages/reading_detail_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../widgets/main_layout.dart';
 
 /// DreamBrew AI uygulama yönlendirme yapılandırması.
-/// go_router kullanılarak tüm ekran akışları tanımlanmıştır.
+/// go_router + StatefulShellRoute kullanılarak sekme tabanlı navigasyon.
 class AppRouter {
   AppRouter._();
 
@@ -27,35 +36,93 @@ class AppRouter {
   static const String fortuneResult = '/fortune-result';
   static const String history = '/history';
   static const String readingDetail = '/reading-detail';
+  static const String settings = '/settings';
+
+  // ─── Navigasyon anahtarı ──────────────────────────────────
+  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
   /// Uygulamanın tek GoRouter örneği
   static final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
+
     /// İlk açılışta Onboarding ekranı gösterilir
     initialLocation: onboarding,
     debugLogDiagnostics: false,
     routes: [
+      // ─── Onboarding (shell dışı) ────────────────────────────
       GoRoute(
         path: onboarding,
         name: 'onboarding',
         builder: (context, state) => const OnboardingPage(),
       ),
-      GoRoute(
-        path: home,
-        name: 'home',
-        builder: (context, state) => const HomePage(),
+
+      // ─── Ana Sekme Yapısı (ShellRoute) ──────────────────────
+      //
+      // Home ve History sekmeleri MainLayout içinde gösterilir.
+      // Bottom navbar bu sekmeler arasında kalıcıdır.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainLayout(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: home,
+                name: 'home',
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
+          ),
+
+          // Branch 1: History
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: history,
+                name: 'history',
+                builder: (context, state) => const HistoryPage(),
+              ),
+            ],
+          ),
+
+          // Branch 2: Settings (placeholder)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: settings,
+                name: 'settings',
+                builder: (context, state) => const Scaffold(
+                  backgroundColor: Color(0xFF0D0A1E),
+                  body: Center(
+                    child: Text(
+                      'Settings\nYakında...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white54, fontSize: 18),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
 
-      // ─── Dream Feature Rotaları ────────────────────────────────
+      // ─── Dream Feature Rotaları (ShellRoute DIŞI) ───────────
+      //
+      // Bu ekranlar tam ekran açılır, navbar görünmez.
       GoRoute(
         path: dreamInput,
         name: 'dreamInput',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const DreamInputPage(),
       ),
       GoRoute(
         path: dreamResult,
         name: 'dreamResult',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          // DreamReading objesini extra parametresi olarak al
           final reading = state.extra as DreamReading;
           return DreamResultPage(reading: reading);
         },
@@ -63,40 +130,36 @@ class AppRouter {
       GoRoute(
         path: dreamArt,
         name: 'dreamArt',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          // DreamReading opsiyonel olarak gelebilir
           final reading = state.extra as DreamReading?;
           return DreamArtPage(reading: reading);
         },
       ),
 
-      // ─── Fortune Feature Rotaları ──────────────────────────────
+      // ─── Fortune Feature Rotaları (ShellRoute DIŞI) ─────────
       GoRoute(
         path: fortuneUpload,
         name: 'fortuneUpload',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const FortuneUploadPage(),
       ),
       GoRoute(
         path: fortuneResult,
         name: 'fortuneResult',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          // FortuneReading objesini extra parametresi olarak al
           final reading = state.extra as FortuneReading;
           return FortuneResultPage(reading: reading);
         },
       ),
 
-      // ─── History Feature Rotaları ──────────────────────────────
-      GoRoute(
-        path: history,
-        name: 'history',
-        builder: (context, state) => const HistoryPage(),
-      ),
+      // ─── History Detail (ShellRoute DIŞI) ───────────────────
       GoRoute(
         path: readingDetail,
         name: 'readingDetail',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          // SavedReading objesini extra parametresi olarak al
           final reading = state.extra as SavedReading;
           return ReadingDetailPage(reading: reading);
         },
