@@ -21,6 +21,7 @@ import '../../features/dream/domain/repositories/i_dream_repository.dart';
 import '../../features/dream/presentation/bloc/dream_bloc.dart';
 import '../../features/fortune/data/repositories/mock_fortune_repository.dart';
 import '../../features/fortune/domain/repositories/i_fortune_repository.dart';
+import '../../features/fortune/presentation/bloc/fortune_bloc.dart';
 
 /// Global service locator örneği.
 ///
@@ -63,4 +64,7 @@ Future<void> setupLocator() async {
   // Kahve falı repository'si.
   // Gerçek Vision AI entegrasyonuna kadar mock kullanılır.
   sl.registerLazySingleton<IFortuneRepository>(() => MockFortuneRepository());
+
+  // FortuneBloc — her ekran için yeni bir BLoC örneği oluşturulmalıdır
+  sl.registerFactory<FortuneBloc>(() => FortuneBloc(sl<IFortuneRepository>()));
 }
