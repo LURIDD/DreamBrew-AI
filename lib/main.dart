@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/local_storage/saved_reading.dart';
 import 'core/local_storage/saved_reading_adapter.dart';
@@ -10,6 +11,9 @@ import 'core/theme/app_theme.dart';
 /// DreamBrew AI — Uygulama giriş noktası
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Ortam değişkenlerini yükle (.env dosyasından API anahtarları)
+  await dotenv.load(fileName: '.env');
 
   // Hive yerel veritabanını başlat
   await Hive.initFlutter();

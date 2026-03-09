@@ -12,12 +12,16 @@ import '../entities/dream_reading.dart';
 /// Gerçek implementasyon bir LLM API'sine istek atarken,
 /// mock implementasyon sahte veriler döner. BLoC bu ayrımı bilmez.
 abstract interface class IDreamRepository {
-  /// Kullanıcının girdiği rüya metnini yorumlar ve [DreamReading] döner.
+  /// Kullanıcının girdiği rüya metnini seçilen tarzda yorumlar ve [DreamReading] döner.
   ///
   /// [dreamText] — Kullanıcının serbest biçimde yazdığı rüya anlatımı.
+  /// [style] — Yorum tarzı: 'Mystical', 'Fun' veya 'Psychological'.
   ///
   /// Hata durumunda [Exception] fırlatabilir.
-  Future<DreamReading> interpretDream(String dreamText);
+  Future<DreamReading> interpretDream(
+    String dreamText, {
+    required String style,
+  });
 
   /// Kullanıcıya ait geçmiş rüya yorumlarını listeler.
   ///

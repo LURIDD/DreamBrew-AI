@@ -1,59 +1,50 @@
-/// DreamBrew AI — Görsel Sıkıştırma Servisi (Mock)
+/// DreamBrew AI — Görsel Sıkıştırma ve Base64 Dönüşüm Servisi
 ///
-/// Bu sınıf, kahve fincanı fotoğraflarının sunucuya gönderilmeden önce
-/// sıkıştırılmasını simüle eder. Production'da gerçek bir sıkıştırma
-/// kütüphanesi (flutter_image_compress vb.) ile değiştirilecektir.
+/// Kahve fincanı fotoğraflarını Vision API'ye gönderilebilir formata
+/// dönüştürür. Dosyanın gerçek byte'larını okur ve base64'e çevirir.
 ///
-/// Şu anki davranış:
-/// - 500ms gecikme ile gerçek sıkıştırma süresini taklit eder
-/// - Dosya yolundan basit bir base64 benzeri string üretir
-/// - Orijinal dosya boyutunu ve sıkıştırılmış boyutu loglar
+/// ### Kullanım:
+/// ```dart
+/// final base64 = await ImageCompressor.compress(File('path/to/image.jpg'));
+/// // base64 → Vision API'ye gönderilmeye hazır string
+/// ```
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
-/// Görsel dosyalarını sıkıştırmak için kullanılan yardımcı sınıf.
+import 'package:flutter/foundation.dart';
+
+/// Görsel dosyalarını base64 formatına dönüştüren yardımcı sınıf.
 ///
 /// Tüm metotlar statiktir; instance oluşturmaya gerek yoktur.
-///
-/// ### Kullanım:
-/// ```dart
-/// final compressed = await ImageCompressor.compress(File('path/to/image.jpg'));
-/// // compressed → base64 formatında string
-/// ```
 abstract final class ImageCompressor {
-  /// Verilen [imageFile]'ı sıkıştırır ve base64 string olarak döner.
+  /// Verilen [imageFile]'ı okur ve base64 string olarak döner.
   ///
-  /// **Mock Davranış:**
-  /// - 500ms yapay gecikme uygular
-  /// - Dosya yolunun byte'larını base64'e çevirir
-  /// - Gerçek görsel verisi ile çalışmaz (production'da değişecek)
+  /// Dosyanın gerçek byte'larını okuyarak base64 encode işlemi yapar.
+  /// Vision API bu formatta görsel kabul eder.
   ///
-  /// **Production'da:**
-  /// - flutter_image_compress ile gerçek sıkıştırma
-  /// - Hedef kalite: %70, maks boyut: 800x800
-  /// - WebP formatına dönüşüm
+  /// [imageFile] — Sıkıştırılacak görsel dosyası
+  /// Dönüş: Base64 formatında string
   static Future<String> compress(File imageFile) async {
-    // Gerçek sıkıştırma süresini simüle et
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    // Dosyanın gerçek byte'larını oku
+    final bytes = await imageFile.readAsBytes();
 
-    // Dosya yolundan base64 string üret (mock)
-    // Production'da burada gerçek byte'lar sıkıştırılacak
-    final originalBytes = utf8.encode(imageFile.path);
-    final compressedBase64 = base64Encode(originalBytes);
+    // Base64'e dönüştür
+    final base64String = base64Encode(bytes);
 
     // Debug bilgisi
-    assert(() {
-      // ignore: avoid_print
-      print(
-        '📸 ImageCompressor [Mock]:\n'
-        '   Orijinal yol: ${imageFile.path}\n'
-        '   Simüle edilen çıktı boyutu: ${compressedBase64.length} karakter',
+    if (kDebugMode) {
+      final fileSizeKB = (bytes.length / 1024).toStringAsFixed(1);
+      final base64SizeKB = (base64String.length / 1024).toStringAsFixed(1);
+      debugPrint(
+        '📸 ImageCompressor:\n'
+        '   Dosya: ${imageFile.path}\n'
+        '   Orijinal boyut: $fileSizeKB KB\n'
+        '   Base64 boyut: $base64SizeKB KB',
       );
-      return true;
-    }());
+    }
 
-    return compressedBase64;
+    return base64String;
   }
 }
