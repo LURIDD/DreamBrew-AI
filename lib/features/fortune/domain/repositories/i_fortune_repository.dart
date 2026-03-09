@@ -12,12 +12,16 @@ import '../entities/fortune_reading.dart';
 /// Gerçek implementasyon bir Vision AI API'sine görsel gönderirken,
 /// mock implementasyon sahte veriler döner. BLoC bu ayrımı bilmez.
 abstract interface class IFortuneRepository {
-  /// Kullanıcının gönderdiği kahve fincanı görselini yorumlar ve [FortuneReading] döner.
+  /// Kullanıcının gönderdiği kahve fincanı görselini seçilen tarzda yorumlar ve [FortuneReading] döner.
   ///
   /// [imageBase64] — Fotoğrafın base64 ile kodlanmış string hali.
+  /// [style] — Yorum tarzı: 'Mystical', 'Fun' veya 'Psychological'.
   ///
   /// Hata durumunda [Exception] fırlatabilir.
-  Future<FortuneReading> readFortune(String imageBase64);
+  Future<FortuneReading> readFortune(
+    String imageBase64, {
+    required String style,
+  });
 
   /// Kullanıcıya ait geçmiş kahve falı yorumlarını listeler.
   ///

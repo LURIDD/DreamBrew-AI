@@ -16,10 +16,11 @@ library;
 
 import 'package:get_it/get_it.dart';
 
-import '../../features/dream/data/repositories/mock_dream_repository.dart';
+import '../network/api_client.dart';
+import '../../features/dream/data/repositories/dream_repository_impl.dart';
 import '../../features/dream/domain/repositories/i_dream_repository.dart';
 import '../../features/dream/presentation/bloc/dream_bloc.dart';
-import '../../features/fortune/data/repositories/mock_fortune_repository.dart';
+import '../../features/fortune/data/repositories/fortune_repository_impl.dart';
 import '../../features/fortune/domain/repositories/i_fortune_repository.dart';
 import '../../features/fortune/presentation/bloc/fortune_bloc.dart';
 import '../local_storage/hive_service.dart';
@@ -41,33 +42,33 @@ final GetIt sl = GetIt.instance;
 ///
 /// - `registerLazySingleton`: İlk kez `sl<T>()` çağrıldığında örnek oluşturulur
 ///   ve uygulama boyunca o örnek yeniden kullanılır.
-///   Repository'ler için ideal seçimdir.
+///   Repository'ler ve servisler için ideal seçimdir.
 ///
-/// ### Mock → Real Geçişi
-///
-/// AI servisleri hazır olduğunda yalnızca bu dosyadaki ilgili satırı değiştir:
-/// ```dart
-/// // Eski (Mock):
-/// sl.registerLazySingleton<IDreamRepository>(() => MockDreamRepository());
-///
-/// // Yeni (Real):
-/// sl.registerLazySingleton<IDreamRepository>(() => RealDreamRepository(sl<DioClient>()));
-/// ```
+/// - `registerFactory`: Her çağrıda yeni bir örnek oluşturulur.
+///   BLoC'lar için ideal seçimdir (her ekran kendi BLoC'unu almalı).
 Future<void> setupLocator() async {
+  // ─── Core: Ağ Katmanı ─────────────────────────────────────────────────
+  //
+  // Gemini API ile iletişim kuran merkezi HTTP istemcisi.
+  // Tüm repository'ler bu istemciyi paylaşır.
+  sl.registerLazySingleton<ApiClient>(() => ApiClient());
+
   // ─── Dream Feature ───────────────────────────────────────────────────────
   //
-  // Rüya yorumu repository'si.
-  // Gerçek LLM entegrasyonuna kadar mock kullanılır.
-  sl.registerLazySingleton<IDreamRepository>(() => MockDreamRepository());
+  // Rüya yorumu repository'si — Gemini LLM API kullanır.
+  sl.registerLazySingleton<IDreamRepository>(
+    () => DreamRepositoryImpl(sl<ApiClient>()),
+  );
 
   // DreamBloc — her ekran için yeni bir BLoC örneği oluşturulmalıdır
   sl.registerFactory<DreamBloc>(() => DreamBloc(sl<IDreamRepository>()));
 
   // ─── Fortune Feature ─────────────────────────────────────────────────────
   //
-  // Kahve falı repository'si.
-  // Gerçek Vision AI entegrasyonuna kadar mock kullanılır.
-  sl.registerLazySingleton<IFortuneRepository>(() => MockFortuneRepository());
+  // Kahve falı repository'si — Gemini Vision API kullanır.
+  sl.registerLazySingleton<IFortuneRepository>(
+    () => FortuneRepositoryImpl(sl<ApiClient>()),
+  );
 
   // FortuneBloc — her ekran için yeni bir BLoC örneği oluşturulmalıdır
   sl.registerFactory<FortuneBloc>(() => FortuneBloc(sl<IFortuneRepository>()));

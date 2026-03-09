@@ -9,6 +9,7 @@ library;
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/network/app_exceptions.dart';
 import '../../data/services/image_compressor.dart';
 import '../../domain/entities/fortune_reading.dart';
 import '../../domain/repositories/i_fortune_repository.dart';
@@ -172,20 +173,29 @@ class FortuneBloc extends Bloc<FortuneEvent, FortuneState> {
     emit(FortuneAnalyzing(imagePath: _currentImagePath!));
 
     try {
-      // 1. Görseli sıkıştır (mock simülasyon)
+      // 1. Görseli sıkıştır ve base64'e dönüştür
       final compressedBase64 = await ImageCompressor.compress(
         File(_currentImagePath!),
       );
 
       // 2. Repository'e gönder ve fal yorumunu al
-      final reading = await _repository.readFortune(compressedBase64);
+      final reading = await _repository.readFortune(
+        compressedBase64,
+        style: event.style,
+      );
 
       // 3. Başarılı sonucu yay
       emit(FortuneSuccess(reading: reading));
-    } on Exception catch (e) {
+    } on AppException catch (e) {
+      // Custom exception'lar zaten kullanıcı dostu mesaj taşır
+      emit(FortuneError(message: e.message, imagePath: _currentImagePath));
+    } on Exception {
+      // Beklenmeyen hatalar için genel mesaj — teknik detay UI'a sızmaz
       emit(
         FortuneError(
-          message: 'Fal yorumlanırken bir hata oluştu: $e',
+          message:
+              'Fincanınız yorumlanırken kozmik bir engele takıldık… '
+              'Lütfen tekrar deneyin. ☕',
           imagePath: _currentImagePath,
         ),
       );

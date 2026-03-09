@@ -6,6 +6,7 @@
 library;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/network/app_exceptions.dart';
 import '../../domain/entities/dream_reading.dart';
 import '../../domain/repositories/i_dream_repository.dart';
 
@@ -88,10 +89,23 @@ class DreamBloc extends Bloc<DreamEvent, DreamState> {
     emit(const DreamLoading());
 
     try {
-      final reading = await _repository.interpretDream(event.dreamText);
+      final reading = await _repository.interpretDream(
+        event.dreamText,
+        style: event.style,
+      );
       emit(DreamSuccess(reading: reading));
-    } on Exception catch (e) {
-      emit(DreamError(message: 'Rüya yorumlanırken bir hata oluştu: $e'));
+    } on AppException catch (e) {
+      // Custom exception'lar zaten kullanıcı dostu mesaj taşır
+      emit(DreamError(message: e.message));
+    } on Exception {
+      // Beklenmeyen hatalar için genel mesaj — teknik detay UI'a sızmaz
+      emit(
+        const DreamError(
+          message:
+              'Rüyanız yorumlanırken kozmik bir engele takıldık… '
+              'Lütfen tekrar deneyin. 🔮',
+        ),
+      );
     }
   }
 }
