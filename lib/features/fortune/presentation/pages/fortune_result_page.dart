@@ -17,6 +17,9 @@ import '../../../../core/widgets/snackbar_helper.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../history/presentation/bloc/history_bloc.dart';
 import '../../domain/entities/fortune_reading.dart';
+import '../../../visualization/presentation/cubit/visualization_cubit.dart';
+import '../../../visualization/presentation/widgets/visualization_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Kahve Falı Sonuç Sayfası
 ///
@@ -58,9 +61,11 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        child: Column(
+      body: BlocProvider(
+        create: (_) => sl<VisualizationCubit>(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Başlık kartı — Amber/Altın gradient
@@ -119,10 +124,20 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             _buildSuggestionsSection(),
             const SizedBox(height: 24),
 
+            // AI Visualization Görünümü
+            const VisualizationView(),
+
+            // "Falı Görselleştir" butonu
+            Builder(
+              builder: (context) => _buildGenerateButton(context),
+            ),
+            const SizedBox(height: 14),
+
             // Aksiyon butonları
             _buildActionRow(),
           ],
         ),
+      ),
       ),
     );
   }
@@ -536,6 +551,43 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
           );
         }),
       ],
+    );
+  }
+
+  /// "Falı Görselleştir" butonu
+  Widget _buildGenerateButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final keywords = reading.symbols.map((e) => e.name).toList();
+        context.read<VisualizationCubit>().generateImage(keywords);
+      },
+      child: Container(
+        height: 56,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: AppColors.secondary.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.auto_awesome, color: AppColors.secondaryLight, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              'Falı Görselleştir',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.secondaryLight,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
