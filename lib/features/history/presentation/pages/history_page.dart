@@ -14,7 +14,6 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
-import '../../../../core/di/service_locator.dart';
 import '../bloc/history_bloc.dart';
 
 /// Geçmiş & Favoriler ana ekranı.
@@ -26,10 +25,7 @@ class HistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<HistoryBloc>()..add(const LoadHistory()),
-      child: const _HistoryView(),
-    );
+    return const _HistoryView();
   }
 }
 

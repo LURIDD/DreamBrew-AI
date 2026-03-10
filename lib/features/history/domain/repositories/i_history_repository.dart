@@ -26,4 +26,7 @@ abstract interface class IHistoryRepository {
 
   /// Bir okumayı kalıcı olarak siler.
   Future<void> delete(String id);
+
+  /// Tüm okumaları kalıcı olarak siler.
+  Future<void> clearAll();
 }

@@ -10,18 +10,31 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/snackbar_helper.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../history/presentation/bloc/history_bloc.dart';
 import '../../domain/entities/fortune_reading.dart';
 
 /// Kahve Falı Sonuç Sayfası
 ///
 /// Router'dan `extra` parametresi olarak [FortuneReading] alır.
 /// Üstte tema kartı, ortada semboller ve yorumlar, altta şans bilgileri.
-class FortuneResultPage extends StatelessWidget {
+class FortuneResultPage extends StatefulWidget {
   final FortuneReading reading;
 
   const FortuneResultPage({super.key, required this.reading});
+
+  @override
+  State<FortuneResultPage> createState() => _FortuneResultPageState();
+}
+
+class _FortuneResultPageState extends State<FortuneResultPage> {
+  bool _isSaved = false;
+
+  FortuneReading get reading => widget.reading;
 
   @override
   Widget build(BuildContext context) {
@@ -526,6 +539,27 @@ class FortuneResultPage extends StatelessWidget {
     );
   }
 
+  // ─── Save İşlemi ─────────────────────────────────────────────
+
+  /// FortuneReading → SavedReading dönüşümü yaparak Hive'a kaydeder.
+  void _handleSave() {
+    if (_isSaved) return;
+
+    final savedReading = SavedReading(
+      id: reading.id,
+      type: SavedReadingType.fortune,
+      date: reading.readingDate,
+      title: 'Fincanınız Konuşuyor',
+      content: reading.generalMessage,
+      symbols: reading.symbols.map((s) => s.name).toList(),
+    );
+
+    sl<HistoryBloc>().add(SaveReadingEvent(reading: savedReading));
+
+    setState(() => _isSaved = true);
+    SnackbarHelper.showSuccess(context, 'Kahve falı kaydedildi ☕');
+  }
+
   /// Save & Share buton satırı
   Widget _buildActionRow() {
     return Row(
@@ -533,9 +567,10 @@ class FortuneResultPage extends StatelessWidget {
         // Save butonu
         Expanded(
           child: _actionButton(
-            icon: Icons.bookmark_border,
-            label: 'Kaydet',
-            onTap: () {},
+            icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
+            label: _isSaved ? 'Kaydedildi ✓' : 'Kaydet',
+            onTap: _handleSave,
+            isActive: _isSaved,
           ),
         ),
         const SizedBox(width: 12),
@@ -544,7 +579,12 @@ class FortuneResultPage extends StatelessWidget {
           child: _actionButton(
             icon: Icons.ios_share,
             label: 'Paylaş',
-            onTap: () {},
+            onTap: () {
+              SnackbarHelper.showInfo(
+                context,
+                'Paylaşım özelliği yakında aktif olacak!',
+              );
+            },
           ),
         ),
       ],
@@ -556,30 +596,41 @@ class FortuneResultPage extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.6),
+          color: isActive
+              ? AppColors.secondary.withValues(alpha: 0.15)
+              : AppColors.surface.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.secondary.withValues(alpha: 0.2),
+            color: isActive
+                ? AppColors.secondary.withValues(alpha: 0.4)
+                : AppColors.secondary.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 18,
+              color: isActive ? AppColors.secondaryLight : AppColors.textSecondary,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive
+                    ? AppColors.secondaryLight
+                    : AppColors.textSecondary,
               ),
             ),
           ],

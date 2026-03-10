@@ -41,6 +41,11 @@ class DeleteReadingEvent extends HistoryEvent {
   const DeleteReadingEvent({required this.readingId});
 }
 
+/// Tüm okumaları sil (Ayarlar → Verileri Temizle)
+class ClearAllReadingsEvent extends HistoryEvent {
+  const ClearAllReadingsEvent();
+}
+
 // ============================================================
 // STATES — Geçmiş modülünün durumları
 // ============================================================
@@ -99,6 +104,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<SaveReadingEvent>(_onSaveReading);
     on<ToggleFavoriteEvent>(_onToggleFavorite);
     on<DeleteReadingEvent>(_onDeleteReading);
+    on<ClearAllReadingsEvent>(_onClearAll);
   }
 
   /// Tüm okumaları yükler ve türlerine göre ayırır.
@@ -159,6 +165,19 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       add(const LoadHistory()); // Listeyi yenile
     } on Exception catch (e) {
       emit(HistoryError(message: 'Okuma silinirken hata oluştu: $e'));
+    }
+  }
+
+  /// Tüm okumaları siler ve listeyi yeniler.
+  Future<void> _onClearAll(
+    ClearAllReadingsEvent event,
+    Emitter<HistoryState> emit,
+  ) async {
+    try {
+      await _repository.clearAll();
+      add(const LoadHistory()); // Listeyi yenile
+    } on Exception catch (e) {
+      emit(HistoryError(message: 'Veriler temizlenirken hata oluştu: $e'));
     }
   }
 }

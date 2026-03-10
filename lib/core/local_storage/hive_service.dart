@@ -65,6 +65,11 @@ class HiveService {
     await _box.delete(id);
   }
 
+  /// Tüm okumaları kalıcı olarak siler.
+  Future<void> clearAll() async {
+    await _box.clear();
+  }
+
   /// Box'taki toplam okuma sayısını döner.
   int get count => _box.length;
 }

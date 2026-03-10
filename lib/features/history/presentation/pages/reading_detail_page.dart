@@ -15,7 +15,6 @@ import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
-import '../../../../core/di/service_locator.dart';
 import '../bloc/history_bloc.dart';
 
 /// Kayıtlı okuma detay sayfası.
@@ -45,17 +44,15 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   Widget build(BuildContext context) {
     final isDream = widget.reading.type == SavedReadingType.dream;
 
-    return BlocProvider(
-      create: (_) => sl<HistoryBloc>(),
-      child: BlocListener<HistoryBloc, HistoryState>(
-        listener: (context, state) {
-          // Silme veya favori sonrası hata oluşursa snackbar göster
-          if (state is HistoryError) {
-            SnackbarHelper.showError(context, state.message);
-          }
-        },
-        child: Scaffold(
-          backgroundColor: AppColors.background,
+    return BlocListener<HistoryBloc, HistoryState>(
+      listener: (context, state) {
+        // Silme veya favori sonrası hata oluşursa snackbar göster
+        if (state is HistoryError) {
+          SnackbarHelper.showError(context, state.message);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
 
           // ─── AppBar ────────────────────────────────────────────
           appBar: AppBar(
@@ -133,24 +130,98 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                 ),
                 const SizedBox(height: 32),
 
-                // İçerik metni
-                Align(
-                  alignment: Alignment.centerLeft,
+                // Eğer semboller varsa göster
+                _buildSymbolSection(),
+
+                // İçerik metni (Özel Kart İçinde)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: (isDream ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
                   child: Text(
                     widget.reading.content,
-                    style: AppTextStyles.bodyMedium.copyWith(
+                    style: GoogleFonts.inter(
                       fontSize: 15,
-                      height: 1.8,
                       color: AppColors.textSecondary,
+                      height: 1.8,
                     ),
-                    textAlign: TextAlign.left,
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
+      );
+  }
+
+  // ============================================================
+  // UI Bileşenleri
+  // ============================================================
+
+  /// Kaydedilen sembolleri şık çipler (chip) halinde gösterir
+  Widget _buildSymbolSection() {
+    final symbols = widget.reading.symbols;
+    if (symbols == null || symbols.isEmpty) return const SizedBox.shrink();
+
+    final isDream = widget.reading.type == SavedReadingType.dream;
+    final color = isDream ? AppColors.primaryLight : AppColors.secondaryLight;
+    final borderColor = isDream ? AppColors.primary : AppColors.secondary;
+    final bgColor = isDream ? AppColors.surface : AppColors.fortuneCardStart;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'TESPİT EDİLEN SEMBOLLER',
+          style: AppTextStyles.bodySmall.copyWith(
+            letterSpacing: 2,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textHint,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: symbols.map((symbol) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: bgColor.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: borderColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome, size: 14, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    '#$symbol',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 32),
+      ],
     );
   }
 

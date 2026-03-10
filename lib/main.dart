@@ -6,7 +6,9 @@ import 'core/local_storage/saved_reading.dart';
 import 'core/local_storage/saved_reading_adapter.dart';
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'features/history/presentation/bloc/history_bloc.dart';
 
 /// DreamBrew AI — Uygulama giriş noktası
 void main() async {
@@ -44,15 +46,18 @@ class DreamBrewApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'DreamBrew AI',
-      debugShowCheckedModeBanner: false,
+    return BlocProvider<HistoryBloc>(
+      create: (_) => sl<HistoryBloc>()..add(const LoadHistory()),
+      child: MaterialApp.router(
+        title: 'DreamBrew AI',
+        debugShowCheckedModeBanner: false,
 
-      // Material 3 karanlık tema
-      theme: AppTheme.darkTheme,
+        // Material 3 karanlık tema
+        theme: AppTheme.darkTheme,
 
-      // go_router yapılandırması
-      routerConfig: AppRouter.router,
+        // go_router yapılandırması
+        routerConfig: AppRouter.router,
+      ),
     );
   }
 }

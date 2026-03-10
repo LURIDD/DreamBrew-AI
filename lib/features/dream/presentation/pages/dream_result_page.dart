@@ -9,19 +9,32 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/snackbar_helper.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../history/presentation/bloc/history_bloc.dart';
 import '../../domain/entities/dream_reading.dart';
 
 /// Rüya Yorumu Sonuç Sayfası
 ///
 /// Router'dan `extra` parametresi olarak [DreamReading] alır.
 /// Üstte header kartı, ortada yorum, altta sembol chip'leri ve butonlar.
-class DreamResultPage extends StatelessWidget {
+class DreamResultPage extends StatefulWidget {
   final DreamReading reading;
 
   const DreamResultPage({super.key, required this.reading});
+
+  @override
+  State<DreamResultPage> createState() => _DreamResultPageState();
+}
+
+class _DreamResultPageState extends State<DreamResultPage> {
+  bool _isSaved = false;
+
+  DreamReading get reading => widget.reading;
 
   @override
   Widget build(BuildContext context) {
@@ -330,6 +343,27 @@ class DreamResultPage extends StatelessWidget {
     );
   }
 
+  // ─── Save İşlemi ─────────────────────────────────────────────
+
+  /// DreamReading → SavedReading dönüşümü yaparak Hive'a kaydeder.
+  void _handleSave() {
+    if (_isSaved) return;
+
+    final savedReading = SavedReading(
+      id: reading.id,
+      type: SavedReadingType.dream,
+      date: reading.interpretedAt,
+      title: _generateTitle(),
+      content: reading.overallMessage,
+      symbols: reading.symbols.map((s) => s.symbol).toList(),
+    );
+
+    sl<HistoryBloc>().add(SaveReadingEvent(reading: savedReading));
+
+    setState(() => _isSaved = true);
+    SnackbarHelper.showSuccess(context, 'Rüya yorumu kaydedildi ✨');
+  }
+
   /// Save & Share buton satırı
   Widget _buildActionRow() {
     return Row(
@@ -337,9 +371,10 @@ class DreamResultPage extends StatelessWidget {
         // Save butonu
         Expanded(
           child: _actionButton(
-            icon: Icons.bookmark_border,
-            label: 'Save',
-            onTap: () {},
+            icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
+            label: _isSaved ? 'Saved ✓' : 'Save',
+            onTap: _handleSave,
+            isActive: _isSaved,
           ),
         ),
         const SizedBox(width: 12),
@@ -348,7 +383,12 @@ class DreamResultPage extends StatelessWidget {
           child: _actionButton(
             icon: Icons.ios_share,
             label: 'Share',
-            onTap: () {},
+            onTap: () {
+              SnackbarHelper.showInfo(
+                context,
+                'Paylaşım özelliği yakında aktif olacak!',
+              );
+            },
           ),
         ),
       ],
@@ -360,30 +400,41 @@ class DreamResultPage extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.6),
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.2)
+              : AppColors.surface.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.25),
+            color: isActive
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : AppColors.primary.withValues(alpha: 0.25),
             width: 1,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 18,
+              color: isActive ? AppColors.primaryLight : AppColors.textSecondary,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive
+                    ? AppColors.primaryLight
+                    : AppColors.textSecondary,
               ),
             ),
           ],

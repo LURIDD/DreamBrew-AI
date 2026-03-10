@@ -1,8 +1,8 @@
 /// DreamBrew AI — Uygulama Yönlendirme Yapılandırması
 ///
 /// go_router + ShellRoute ile sekme tabanlı navigasyon.
-/// Ana sekmeler (Home, History) → MainLayout içinde kalır.
-/// Dream/Fortune/Detail ekranları → ShellRoute dışında, navbar olmadan açılır.
+/// Ana sekmeler (Home, Settings) → MainLayout içinde kalır.
+/// Dream/Fortune/Detail/History ekranları → ShellRoute dışında, navbar olmadan açılır.
 library;
 
 import 'package:flutter/material.dart';
@@ -19,6 +19,7 @@ import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/history/presentation/pages/reading_detail_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../widgets/main_layout.dart';
 
 /// DreamBrew AI uygulama yönlendirme yapılandırması.
@@ -58,8 +59,8 @@ class AppRouter {
 
       // ─── Ana Sekme Yapısı (ShellRoute) ──────────────────────
       //
-      // Home ve History sekmeleri MainLayout içinde gösterilir.
-      // Bottom navbar bu sekmeler arasında kalıcıdır.
+      // Home ve Settings sekmeleri MainLayout içinde gösterilir.
+      // Notched Bottom App Bar bu sekmeler arasında kalıcıdır.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainLayout(navigationShell: navigationShell);
@@ -76,37 +77,28 @@ class AppRouter {
             ],
           ),
 
-          // Branch 1: History
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: history,
-                name: 'history',
-                builder: (context, state) => const HistoryPage(),
-              ),
-            ],
-          ),
-
-          // Branch 2: Settings (placeholder)
+          // Branch 1: Settings
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: settings,
                 name: 'settings',
-                builder: (context, state) => const Scaffold(
-                  backgroundColor: Color(0xFF0D0A1E),
-                  body: Center(
-                    child: Text(
-                      'Settings\nYakında...',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white54, fontSize: 18),
-                    ),
-                  ),
-                ),
+                builder: (context, state) => const SettingsPage(),
               ),
             ],
           ),
         ],
+      ),
+
+      // ─── History (ShellRoute DIŞI) ──────────────────────────
+      //
+      // History artık alt bardan kaldırıldı.
+      // Home ekranındaki History butonuyla push ile açılır.
+      GoRoute(
+        path: history,
+        name: 'history',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const HistoryPage(),
       ),
 
       // ─── Dream Feature Rotaları (ShellRoute DIŞI) ───────────
