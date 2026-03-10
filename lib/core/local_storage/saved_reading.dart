@@ -40,6 +40,9 @@ class SavedReading extends HiveObject {
   /// Kullanıcı bu okumayı favorilere eklediyse true
   bool isFavorite;
 
+  /// Okumada tespit edilen sembollerin listesi (örn. kuş, uçmak)
+  final List<String>? symbols;
+
   SavedReading({
     required this.id,
     required this.type,
@@ -47,6 +50,7 @@ class SavedReading extends HiveObject {
     required this.title,
     required this.content,
     this.isFavorite = false,
+    this.symbols,
   });
 
   /// Favori durumunu tersine çevirir.
@@ -62,6 +66,7 @@ class SavedReading extends HiveObject {
     String? title,
     String? content,
     bool? isFavorite,
+    List<String>? symbols,
   }) {
     return SavedReading(
       id: id ?? this.id,
@@ -70,6 +75,7 @@ class SavedReading extends HiveObject {
       title: title ?? this.title,
       content: content ?? this.content,
       isFavorite: isFavorite ?? this.isFavorite,
+      symbols: symbols ?? this.symbols,
     );
   }
 

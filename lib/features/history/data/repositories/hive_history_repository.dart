@@ -42,4 +42,9 @@ class HiveHistoryRepository implements IHistoryRepository {
   Future<void> delete(String id) async {
     await _hiveService.deleteReading(id);
   }
+
+  @override
+  Future<void> clearAll() async {
+    await _hiveService.clearAll();
+  }
 }

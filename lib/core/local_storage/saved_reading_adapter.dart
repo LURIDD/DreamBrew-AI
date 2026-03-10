@@ -18,6 +18,7 @@ import 'saved_reading.dart';
 ///   3 → title (String)
 ///   4 → content (String)
 ///   5 → isFavorite (bool)
+///   6 → symbols (List of String)
 class SavedReadingAdapter extends TypeAdapter<SavedReading> {
   @override
   final int typeId = 0;
@@ -37,6 +38,7 @@ class SavedReadingAdapter extends TypeAdapter<SavedReading> {
       title: fields[3] as String,
       content: fields[4] as String,
       isFavorite: fields[5] as bool,
+      symbols: (fields[6] as List?)?.cast<String>(),
     );
   }
 
@@ -55,6 +57,8 @@ class SavedReadingAdapter extends TypeAdapter<SavedReading> {
       ..writeByte(4)
       ..write(obj.content)
       ..writeByte(5)
-      ..write(obj.isFavorite);
+      ..write(obj.isFavorite)
+      ..writeByte(6)
+      ..write(obj.symbols);
   }
 }

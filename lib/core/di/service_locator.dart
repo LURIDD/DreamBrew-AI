@@ -85,6 +85,6 @@ Future<void> setupLocator() async {
     () => HiveHistoryRepository(sl<HiveService>()),
   );
 
-  // HistoryBloc — her ekran için yeni bir BLoC örneği
-  sl.registerFactory<HistoryBloc>(() => HistoryBloc(sl<IHistoryRepository>()));
+  // HistoryBloc — uygulama genelinde tek bir örnek (Singleton)
+  sl.registerLazySingleton<HistoryBloc>(() => HistoryBloc(sl<IHistoryRepository>()));
 }

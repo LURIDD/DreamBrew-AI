@@ -1,8 +1,8 @@
-/// DreamBrew AI — Ana Sayfa (Home Dashboard)
+/// DreamBrew AI — Ana Sayfa (Home Screen)
 ///
-/// Rüya Yorumu ve Kahve Falı giriş kartlarını içerir.
-/// MainLayout (ShellRoute) tarafından sarıldığı için
-/// kendi BottomNavigationBar'ı yoktur.
+/// Astroloji & mistik temalı yeni tasarım.
+/// Günlük Kozmik Rehber, Ay Fazı kartı ve selamlama metni.
+/// Sol üstte History butonu, başlıkta DreamBrew AI logosu.
 library;
 
 import 'package:flutter/material.dart';
@@ -12,25 +12,22 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/feature_card.dart';
 import '../bloc/home_bloc.dart';
 
-/// DreamBrew AI ana ekranı (Home Dashboard).
-/// Rüya Yorumu ve Kahve Falı giriş kartlarını içerir.
+/// DreamBrew AI ana ekranı — Astroloji & Mistik temalı Home.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      // Ekran açılır açılmaz selamlama metnini yükle
       create: (_) => HomeBloc()..add(const HomeLoadRequested()),
       child: const _HomeView(),
     );
   }
 }
 
-/// Home Dashboard'un asıl görünümü
+/// Home ekranının asıl görünümü
 class _HomeView extends StatelessWidget {
   const _HomeView();
 
@@ -38,17 +35,39 @@ class _HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
-      // BottomNavigationBar artık MainLayout'ta (ShellRoute)
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // AppBar: Logo + Geçmiş İkonu
+            // ── AppBar: Leading=History, Title=DreamBrew AI ──
             SliverAppBar(
               pinned: false,
               floating: true,
               backgroundColor: AppColors.background,
               centerTitle: true,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GestureDetector(
+                  onTap: () => context.push(AppRouter.history),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.history,
+                        color: AppColors.primaryLight,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               title: RichText(
                 text: TextSpan(
                   children: [
@@ -73,28 +92,14 @@ class _HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-              actions: [
-                // Geçmiş ikonu — tıklanınca History sekmesine geç
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: GestureDetector(
-                    onTap: () => context.go(AppRouter.history),
-                    child: const Icon(
-                      Icons.history,
-                      color: AppColors.textSecondary,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ],
             ),
 
-            // Ana içerik
+            // ── Ana İçerik ──
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // Selamlama başlığı
+                  // Selamlama Başlığı
                   BlocBuilder<HomeBloc, HomeState>(
                     builder: (context, state) {
                       final greeting = state is HomeLoaded
@@ -103,28 +108,336 @@ class _HomeView extends StatelessWidget {
                       return Text(greeting, style: AppTextStyles.greetingTitle);
                     },
                   ),
-                  const SizedBox(height: 24),
-
-                  // Rüya Yorumu Kartı
-                  FeatureCard.dream(
-                    onTap: () {
-                      context.push(AppRouter.dreamInput);
-                    },
+                  const SizedBox(height: 8),
+                  Text(
+                    'Yıldızlar bu gece senin için ne söylüyor?',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
+                  const SizedBox(height: 28),
+
+                  // ─── Günlük Kozmik Rehber Kartı ───
+                  const _CosmicGuideCard(),
                   const SizedBox(height: 16),
 
-                  // Kahve Falı Kartı
-                  FeatureCard.fortune(
-                    onTap: () {
-                      context.push(AppRouter.fortuneUpload);
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                  // ─── Günün Ay Fazı Kartı ───
+                  const _MoonPhaseCard(),
+                  const SizedBox(height: 16),
+
+                  // ─── Mistik İpucu Kartı ───
+                  const _MysticTipCard(),
                 ]),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// Günlük Kozmik Rehber Kartı
+// ============================================================
+
+/// Astrolojik günlük yorum kartı.
+/// Placeholder metin ile burç bazlı kozmik rehberlik sunar.
+class _CosmicGuideCard extends StatelessWidget {
+  const _CosmicGuideCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2D1B69), // mor başlangıç
+            Color(0xFF1A1040), // koyu lacivert
+            Color(0xFF0F1B35), // derin gece mavisi
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Üst: İkon + Başlık
+          Row(
+            children: [
+              // Yıldız ikonu
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF9B6DFF), Color(0xFF6D28D9)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Günlük Kozmik Rehber',
+                      style: GoogleFonts.cinzel(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '✦ Bugünün enerjisi',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.secondary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Ayırıcı çizgi
+          Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.0),
+                  AppColors.primary.withValues(alpha: 0.3),
+                  AppColors.primary.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Placeholder astroloji metni
+          Text(
+            '🌟 Bugün Jüpiter sana cesaret fısıldıyor — '
+            'yeni bir adım atmak için yıldızlar senden yana. '
+            'Ancak Merkür retrosu etkisini hâlâ hissettiriyor; '
+            'önemli kararları bir gün daha bekletmekte fayda var.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textSecondary,
+              height: 1.65,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Alt not
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppColors.textHint.withValues(alpha: 0.6),
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Burcuna özel yorum için burç seçimini yakında açacağız.',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textHint,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// Günün Ay Fazı Kartı
+// ============================================================
+
+/// Ay fazı bilgi kartı.
+/// Dolunay ikonu ve mistik metin içerir.
+class _MoonPhaseCard extends StatelessWidget {
+  const _MoonPhaseCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1A1040), // koyu lacivert
+            Color(0xFF0D1B30), // derin gece
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.secondary.withValues(alpha: 0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondary.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Dolunay ikonu
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppColors.secondary.withValues(alpha: 0.25),
+                  AppColors.secondary.withValues(alpha: 0.05),
+                ],
+              ),
+              border: Border.all(
+                color: AppColors.secondary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                '🌕',
+                style: TextStyle(fontSize: 28),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Metin
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Günün Ay Fazı',
+                  style: GoogleFonts.cinzel(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Bu gece rüyalar daha canlı ve sembolik olabilir. '
+                  'Dolunay enerjisi bilinçaltını güçlendiriyor.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// Mistik İpucu Kartı
+// ============================================================
+
+/// Gün içi mistik bir ipucu/öneri kartı.
+class _MysticTipCard extends StatelessWidget {
+  const _MysticTipCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Mum/ışık ikonu
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: Text('🕯️', style: TextStyle(fontSize: 20)),
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // İpucu metni
+          Expanded(
+            child: Text(
+              'Rüyanı unutmadan hemen yorumla — '
+              'ortadaki ✦ butonuna dokun ve keşfet.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 1.45,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
