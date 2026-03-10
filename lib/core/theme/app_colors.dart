@@ -54,6 +54,10 @@ class AppColors {
   /// Üçüncül metin: Çok soluk, ipucu metni
   static const Color textHint = Color(0xFF6B5E8E);
 
+  // --- Hata / Uyarı Renkleri ---
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorLight = Color(0xFFFCA5A5);
+
   // --- Diğer ---
   /// Yıldız / vurgu beyazı
   static const Color starColor = Color(0xFFE2D9F3);

@@ -12,11 +12,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../history/presentation/bloc/history_bloc.dart';
 import '../../domain/entities/dream_reading.dart';
+import '../../../visualization/presentation/cubit/visualization_cubit.dart';
+import '../../../visualization/presentation/widgets/visualization_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Rüya Yorumu Sonuç Sayfası
 ///
@@ -58,9 +60,11 @@ class _DreamResultPageState extends State<DreamResultPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        child: Column(
+      body: BlocProvider(
+        create: (_) => sl<VisualizationCubit>(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Başlık kartı — Mor gradient
@@ -75,14 +79,20 @@ class _DreamResultPageState extends State<DreamResultPage> {
             _buildSymbolSection(),
             const SizedBox(height: 24),
 
+            // AI Visualization Görünümü
+            const VisualizationView(),
+
             // "Generate Dream Image" butonu
-            _buildGenerateButton(context),
+            Builder(
+              builder: (context) => _buildGenerateButton(context),
+            ),
             const SizedBox(height: 14),
 
             // Save & Share satırı
             _buildActionRow(),
           ],
         ),
+      ),
       ),
     );
   }
@@ -315,7 +325,8 @@ class _DreamResultPageState extends State<DreamResultPage> {
   Widget _buildGenerateButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push(AppRouter.dreamArt, extra: reading);
+        final keywords = reading.symbols.map((e) => e.symbol).toList();
+        context.read<VisualizationCubit>().generateImage(keywords);
       },
       child: Container(
         height: 56,

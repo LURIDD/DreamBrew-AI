@@ -28,6 +28,11 @@ import '../../features/history/data/repositories/hive_history_repository.dart';
 import '../../features/history/domain/repositories/i_history_repository.dart';
 import '../../features/history/presentation/bloc/history_bloc.dart';
 
+import '../../features/visualization/data/repositories/image_generation_repository.dart';
+import '../../features/visualization/domain/repositories/i_image_generation_repository.dart';
+import '../../features/visualization/presentation/cubit/visualization_cubit.dart';
+import 'package:dio/dio.dart';
+
 /// Global service locator örneği.
 ///
 /// Uygulamanın her yerinden `sl<T>()` şeklinde erişilir.
@@ -87,4 +92,13 @@ Future<void> setupLocator() async {
 
   // HistoryBloc — uygulama genelinde tek bir örnek (Singleton)
   sl.registerLazySingleton<HistoryBloc>(() => HistoryBloc(sl<IHistoryRepository>()));
+
+  // ==========================================================
+  // Visualization Feature DI
+  // ==========================================================
+  sl.registerLazySingleton<IImageGenerationRepository>(
+      () => ImageGenerationRepository(sl<Dio>()));
+      
+  sl.registerFactory<VisualizationCubit>(
+      () => VisualizationCubit(sl<IImageGenerationRepository>()));
 }

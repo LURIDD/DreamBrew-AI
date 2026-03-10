@@ -15,6 +15,9 @@ import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../visualization/presentation/cubit/visualization_cubit.dart';
+import '../../../visualization/presentation/widgets/visualization_view.dart';
 import '../bloc/history_bloc.dart';
 
 /// Kayıtlı okuma detay sayfası.
@@ -79,9 +82,11 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
           bottomNavigationBar: _buildBottomBar(context),
 
           // ─── Gövde İçerik ──────────────────────────────────────
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            child: Column(
+          body: BlocProvider(
+            create: (_) => sl<VisualizationCubit>(),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 12),
@@ -154,11 +159,21 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // AI Visualization
+                const VisualizationView(),
+
+                // Görselleştir Butonu
+                Builder(
+                  builder: (context) => _buildGenerateButton(context, isDream),
+                ),
               ],
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   // ============================================================
@@ -376,6 +391,54 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
       'December',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  /// "Görselleştir" butonu (Tema renklerine göre uyumlu)
+  Widget _buildGenerateButton(BuildContext context, bool isDream) {
+    if (widget.reading.symbols == null || widget.reading.symbols!.isEmpty) {
+      return const SizedBox.shrink(); // Sembol yoksa görsel üretilemesin
+    }
+
+    final color = isDream ? AppColors.primaryLight : AppColors.secondaryLight;
+    final bgColor = isDream 
+        ? AppColors.primary.withValues(alpha: 0.15) 
+        : AppColors.secondary.withValues(alpha: 0.15);
+    final borderColor = isDream 
+        ? AppColors.primary.withValues(alpha: 0.4) 
+        : AppColors.secondary.withValues(alpha: 0.4);
+
+    return GestureDetector(
+      onTap: () {
+        context.read<VisualizationCubit>().generateImage(widget.reading.symbols!);
+      },
+      child: Container(
+        height: 56,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: borderColor,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.auto_awesome, color: color, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              'Görselleştir',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
