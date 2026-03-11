@@ -504,8 +504,7 @@ class _DescriptionText extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Text(
-        'Unlock the secrets of your subconscious mind through '
-        'ancient dream interpretation and mystic coffee cup readings.',
+        'Rüyalarınızın ve kahve telvenizin gizemlerini keşfedin.',
         style: AppTextStyles.bodyMedium,
         textAlign: TextAlign.center,
       ),
