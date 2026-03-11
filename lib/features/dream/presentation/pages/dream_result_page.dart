@@ -157,13 +157,13 @@ class _DreamResultPageState extends State<DreamResultPage> {
   String _generateTitle() {
     final tone = reading.emotionalTone.toLowerCase();
     if (tone.contains('özgür') || tone.contains('umut')) {
-      return 'The Path of Stars';
+      return 'Yıldızların Yolu';
     } else if (tone.contains('merak') || tone.contains('içe')) {
-      return 'Whispers of Wisdom';
+      return 'Bilgeliğin Fısıltıları';
     } else if (tone.contains('huzur')) {
-      return 'Moonlit Serenity';
+      return 'Ay Işığında Huzur';
     } else {
-      return 'The Path of Stars';
+      return 'Yıldızların Yolu';
     }
   }
 
