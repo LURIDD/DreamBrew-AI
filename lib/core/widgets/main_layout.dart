@@ -25,14 +25,16 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
 
       // Aktif sekmenin sayfasını göster
       body: navigationShell,
 
       // ── Circular Notched Bottom App Bar ──
-      bottomNavigationBar: _buildNotchedBottomBar(context),
+      bottomNavigationBar: _buildNotchedBottomBar(context, colors),
 
       // ── Merkezi FAB — Aksiyon Merkezi ──
       floatingActionButton: _buildCenterFAB(context),
@@ -46,13 +48,13 @@ class MainLayout extends StatelessWidget {
 
   /// Circular Notched Rectangle şeklinde alt bar.
   /// Sol: Home | Sağ: Settings
-  Widget _buildNotchedBottomBar(BuildContext context) {
+  Widget _buildNotchedBottomBar(BuildContext context, ThemedColors colors) {
     final currentIndex = navigationShell.currentIndex;
 
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
-      color: AppColors.surface,
+      color: colors.surfaceColor,
       elevation: 0,
       padding: EdgeInsets.zero,
       child: Container(
@@ -72,7 +74,7 @@ class MainLayout extends StatelessWidget {
             Expanded(
               child: _NavItem(
                 icon: Icons.home_filled,
-                label: 'Home',
+                label: 'Ana Sayfa',
                 isSelected: currentIndex == 0,
                 onTap: () => _onTabTapped(0),
               ),
@@ -85,7 +87,7 @@ class MainLayout extends StatelessWidget {
             Expanded(
               child: _NavItem(
                 icon: Icons.settings_outlined,
-                label: 'Settings',
+                label: 'Ayarlar',
                 isSelected: currentIndex == 1,
                 onTap: () => _onTabTapped(1),
               ),
@@ -153,14 +155,15 @@ class MainLayout extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
+        final sheetColors = AppColors.of(sheetContext);
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: sheetColors.surfaceColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
-                color: Color(0xFF2A1E5C),
+                color: AppColors.primary.withValues(alpha: 0.15),
                 width: 1,
               ),
             ),
@@ -173,7 +176,7 @@ class MainLayout extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textHint.withValues(alpha: 0.4),
+                  color: sheetColors.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -198,6 +201,7 @@ class MainLayout extends StatelessWidget {
 
               // Rüya Yorumu Kartı
               FeatureCard.dream(
+                context: sheetContext,
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   context.push(AppRouter.dreamInput);
@@ -207,6 +211,7 @@ class MainLayout extends StatelessWidget {
 
               // Kahve Falı Kartı
               FeatureCard.fortune(
+                context: sheetContext,
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   context.push(AppRouter.fortuneUpload);
@@ -249,7 +254,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.textHint;
+    final colors = AppColors.of(context);
+    final color = isSelected ? AppColors.primary : colors.textMuted;
 
     return GestureDetector(
       onTap: onTap,

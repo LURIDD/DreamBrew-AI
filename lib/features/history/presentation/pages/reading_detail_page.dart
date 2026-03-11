@@ -7,10 +7,13 @@
 /// Silme işlemi onay diyaloğu ile korunur.
 library;
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -18,6 +21,7 @@ import '../../../../core/widgets/snackbar_helper.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../visualization/presentation/cubit/visualization_cubit.dart';
+import '../../../visualization/presentation/cubit/visualization_state.dart';
 import '../../../visualization/presentation/widgets/visualization_view.dart';
 import '../bloc/history_bloc.dart';
 
@@ -37,6 +41,7 @@ class ReadingDetailPage extends StatefulWidget {
 
 class _ReadingDetailPageState extends State<ReadingDetailPage> {
   late bool _isFavorite;
+  late ThemedColors colors;
 
   @override
   void initState() {
@@ -46,6 +51,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
     final isDream = widget.reading.type == SavedReadingType.dream;
 
     return BlocListener<HistoryBloc, HistoryState>(
@@ -56,11 +62,11 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
 
           // ─── AppBar ────────────────────────────────────────────
           appBar: AppBar(
-            backgroundColor: AppColors.background,
+            backgroundColor: colors.bg,
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: true,
@@ -72,14 +78,14 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                   context.go(AppRouter.home);
                 }
               },
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(Icons.arrow_back, color: colors.textMain),
             ),
             title: Text(
-              'Reading Details',
+              'Okuma Detayları',
               style: GoogleFonts.cinzel(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: colors.textMain,
                 letterSpacing: 0.8,
               ),
             ),
@@ -132,11 +138,11 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
 
                 // Alt başlık: tür + tarih
                 Text(
-                  '${isDream ? 'Dream Interpretation' : 'Coffee Cup Reading'} • ${_formatFullDate(widget.reading.date)}',
+                  '${isDream ? 'Rüya Yorumu' : 'Kahve Falı'} • ${_formatFullDate(widget.reading.date)}',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textHint,
+                    color: colors.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -150,7 +156,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.5),
+                    color: colors.surfaceColor.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: (isDream ? AppColors.primary : AppColors.secondary).withValues(alpha: 0.15),
@@ -161,19 +167,32 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                     widget.reading.content,
                     style: GoogleFonts.inter(
                       fontSize: 15,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                       height: 1.8,
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // AI Visualization
+                // Kayıtlı görsel varsa doğrudan göster
+                if (widget.reading.imageBase64 != null)
+                  _buildSavedImage(widget.reading.imageBase64!),
+
+                // AI Visualization (yeni üretim için)
                 const VisualizationView(),
 
-                // Görselleştir Butonu
+                // Görselleştir Butonu — kayıtlı görsel veya yeni üretilmiş görsel varsa gizle
                 Builder(
-                  builder: (context) => _buildGenerateButton(context, isDream),
+                  builder: (context) {
+                    if (widget.reading.imageBase64 != null) {
+                      return const SizedBox.shrink();
+                    }
+                    final vizState = context.watch<VisualizationCubit>().state;
+                    if (vizState is VisualizationLoaded) {
+                      return const SizedBox.shrink();
+                    }
+                    return _buildGenerateButton(context, isDream);
+                  },
                 ),
               ],
             ),
@@ -195,7 +214,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     final isDream = widget.reading.type == SavedReadingType.dream;
     final color = isDream ? AppColors.primaryLight : AppColors.secondaryLight;
     final borderColor = isDream ? AppColors.primary : AppColors.secondary;
-    final bgColor = isDream ? AppColors.surface : AppColors.fortuneCardStart;
+    final bgColor = isDream ? colors.surfaceColor : colors.fortuneStart;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,7 +225,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textHint,
+            color: colors.textMuted,
           ),
         ),
         const SizedBox(height: 12),
@@ -233,7 +252,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                     '#$symbol',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -247,6 +266,37 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     );
   }
 
+  /// Daha önce kaydedilmiş görseli Base64'ten gösterir
+  Widget _buildSavedImage(String imageBase64) {
+    final imageBytes = base64Decode(imageBase64);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.memory(
+          imageBytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+        ),
+      ),
+    );
+  }
+
   // ============================================================
   // Alt Bar
   // ============================================================
@@ -255,7 +305,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   Widget _buildBottomBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colors.surfaceColor,
         border: Border(
           top: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.15),
@@ -271,29 +321,24 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             // FAVORITE
             _BottomAction(
               icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
-              label: 'FAVORITE',
-              color: _isFavorite ? AppColors.primary : AppColors.textHint,
+              label: 'FAVORİ',
+              color: _isFavorite ? AppColors.primary : colors.textMuted,
               onTap: () => _handleToggleFavorite(context),
             ),
 
             // SHARE
             _BottomAction(
               icon: Icons.share_outlined,
-              label: 'SHARE',
-              color: AppColors.textHint,
-              onTap: () {
-                SnackbarHelper.showInfo(
-                  context,
-                  'Paylaşım özelliği yakında aktif olacak!',
-                );
-              },
+              label: 'PAYLAŞ',
+              color: colors.textMuted,
+              onTap: _handleShare,
             ),
 
             // DELETE
             _BottomAction(
               icon: Icons.delete_outline,
-              label: 'DELETE',
-              color: AppColors.textHint,
+              label: 'SİL',
+              color: colors.textMuted,
               onTap: () => _handleDelete(context),
             ),
           ],
@@ -324,7 +369,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: colors.surfaceColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -333,7 +378,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: colors.textMain,
             ),
           ),
           content: Text(
@@ -341,7 +386,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
+              color: colors.textSub,
               height: 1.5,
             ),
           ),
@@ -353,7 +398,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textHint,
+                  color: colors.textMuted,
                 ),
               ),
             ),
@@ -381,23 +426,94 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     );
   }
 
-  /// Uzun tarih formatı: "October 24, 2023"
+  /// Kayıtlı yorum içeriğini cihazın paylaşım menüsüyle paylaşır.
+  void _handleShare() {
+    final reading = widget.reading;
+    final buffer = StringBuffer();
+    final emoji = reading.type == SavedReadingType.dream ? '✨' : '☕';
+    final label = reading.type == SavedReadingType.dream
+        ? 'Rüya Yorumum'
+        : 'Kahve Falı Yorumum';
+
+    buffer.writeln('$emoji DreamBrew AI — $label');
+    buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━');
+    buffer.writeln();
+    buffer.writeln(reading.content);
+    buffer.writeln();
+    buffer.writeln('— DreamBrew AI ile oluşturuldu ✨');
+
+    SharePlus.instance.share(
+      ShareParams(text: buffer.toString().trim()),
+    );
+  }
+
+  /// Free Tier kullanıcılarına görsel üretiminin kullanılamadığını bildirir.
+  void _showFreeTierDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.secondary, size: 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Yakında Sizlerle! 🌠',
+                style: GoogleFonts.cinzel(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryLight,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Görsel üretim özelliği şu anda geliştirme aşamasındadır.\n\n'
+          'Premium sürümle birlikte yapay zeka destekli '
+          'mistik görseller oluşturabileceksiniz.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: colors.textSub,
+            height: 1.6,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Anladım',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryLight,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Uzun tarih formatı: "24 Ekim 2023"
   String _formatFullDate(DateTime date) {
     const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
     ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   /// "Görselleştir" butonu (Tema renklerine göre uyumlu)
@@ -416,7 +532,16 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
 
     return GestureDetector(
       onTap: () {
-        context.read<VisualizationCubit>().generateImage(widget.reading.symbols!);
+        // Free Tier kontrolü
+        final isFreeTier = dotenv.env['IS_FREE_TIER']?.toLowerCase() == 'true';
+        if (isFreeTier) {
+          _showFreeTierDialog(context);
+          return;
+        }
+        context.read<VisualizationCubit>().generateImage(
+          widget.reading.symbols!,
+          readingId: widget.reading.id,
+        );
       },
       child: Container(
         height: 56,

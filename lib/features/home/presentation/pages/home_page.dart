@@ -39,8 +39,10 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -48,7 +50,7 @@ class _HomeView extends StatelessWidget {
             SliverAppBar(
               pinned: false,
               floating: true,
-              backgroundColor: AppColors.background,
+              backgroundColor: colors.bg,
               centerTitle: true,
               leading: Padding(
                 padding: const EdgeInsets.only(left: 8),
@@ -110,8 +112,11 @@ class _HomeView extends StatelessWidget {
                     builder: (context, state) {
                       final greeting = state is HomeLoaded
                           ? state.greeting
-                          : 'Good Evening';
-                      return Text(greeting, style: AppTextStyles.greetingTitle);
+                          : 'İyi Akşamlar';
+                      return Text(
+                        greeting,
+                        style: AppTextStyles.greetingTitle.copyWith(color: colors.textMain),
+                      );
                     },
                   ),
                   const SizedBox(height: 8),
@@ -120,7 +125,7 @@ class _HomeView extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                       height: 1.4,
                     ),
                   ),
@@ -157,18 +162,16 @@ class _CosmicGuideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2D1B69), // mor başlangıç
-            Color(0xFF1A1040), // koyu lacivert
-            Color(0xFF0F1B35), // derin gece mavisi
-          ],
+          colors: [colors.dreamStart, colors.surfaceColor, colors.bg],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -215,7 +218,7 @@ class _CosmicGuideCard extends StatelessWidget {
                       style: GoogleFonts.cinzel(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: colors.textMain,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -259,7 +262,7 @@ class _CosmicGuideCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
+                  color: colors.textSub,
                   height: 1.65,
                 ),
               );
@@ -306,6 +309,7 @@ class _CosmicGuideCard extends StatelessWidget {
   }
 
   void _showZodiacPicker(BuildContext context) {
+    final colors = AppColors.of(context);
     final signs = [
       'Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
       'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık'
@@ -313,7 +317,7 @@ class _CosmicGuideCard extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: colors.surfaceColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -355,7 +359,7 @@ class _CosmicGuideCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: colors.textMain,
                         ),
                       ),
                     ),
@@ -382,17 +386,16 @@ class _MoonPhaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1040), // koyu lacivert
-            Color(0xFF0D1B30), // derin gece
-          ],
+          colors: [colors.surfaceColor, colors.bg],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -456,7 +459,7 @@ class _MoonPhaseCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
+                    color: colors.textSub,
                     height: 1.5,
                   ),
                 ),
@@ -479,11 +482,13 @@ class _MysticTipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground.withValues(alpha: 0.6),
+        color: colors.cardBg.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.1),
@@ -514,7 +519,7 @@ class _MysticTipCard extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
+                color: colors.textSub,
                 height: 1.45,
                 fontStyle: FontStyle.italic,
               ),

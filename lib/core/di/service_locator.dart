@@ -139,7 +139,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<IImageGenerationRepository>(
       () => ImageGenerationRepository(sl<ApiClient>()));
       
-  // 2. Sonra Cubit'i kaydet (Repository'i sl üzerinden alır)
+  // 2. Sonra Cubit'i kaydet (Repository + HiveService'i sl üzerinden alır)
   sl.registerFactory<VisualizationCubit>(
-      () => VisualizationCubit(sl<IImageGenerationRepository>()));
+      () => VisualizationCubit(sl<IImageGenerationRepository>(), sl<HiveService>()));
 }

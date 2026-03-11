@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 /// DreamBrew AI renk paleti.
 /// Mistik morlar, koyu laciverdler ve altın sarısı vurgular.
+///
+/// Dark ve Light mod desteği:
+/// - Statik sabitler dark moda aittir (geriye uyumluluk).
+/// - [of] factory metodu ile context bazlı theme-aware renkler alınabilir.
 class AppColors {
   AppColors._();
 
@@ -86,4 +90,75 @@ class AppColors {
     end: Alignment.centerRight,
     colors: [primary, primaryLight],
   );
+
+  // ==========================================================
+  // Light Tema Renkleri
+  // ==========================================================
+
+  // --- Light Arka Plan Renkleri ---
+  static const Color backgroundLight = Color(0xFFF7F5FC);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color cardBackgroundLight = Color(0xFFF0ECF7);
+
+  // --- Light Metin Renkleri ---
+  static const Color textPrimaryLight = Color(0xFF1A1A2E);
+  static const Color textSecondaryLight = Color(0xFF4A4A6A);
+  static const Color textHintLight = Color(0xFF9090AA);
+
+  // --- Light Kart Renkleri ---
+  static const Color dreamCardStartLight = Color(0xFFEDE7FA);
+  static const Color dreamCardEndLight = Color(0xFFE0D5F5);
+  static const Color fortuneCardStartLight = Color(0xFFFFF3E0);
+  static const Color fortuneCardEndLight = Color(0xFFFFE8CC);
+
+  // ==========================================================
+  // Context-Aware Renk Sistemi
+  // ==========================================================
+
+  /// Mevcut tema moduna göre uygun rengi döndürür.
+  /// Kullanım: `AppColors.of(context).bg`
+  static ThemedColors of(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark
+        ? const ThemedColors._dark()
+        : const ThemedColors._light();
+  }
+}
+
+/// Tema moduna göre renk sağlayan yardımcı sınıf.
+class ThemedColors {
+  final Color bg;
+  final Color surfaceColor;
+  final Color cardBg;
+  final Color textMain;
+  final Color textSub;
+  final Color textMuted;
+  final Color dreamStart;
+  final Color dreamEnd;
+  final Color fortuneStart;
+  final Color fortuneEnd;
+
+  const ThemedColors._dark()
+      : bg = AppColors.background,
+        surfaceColor = AppColors.surface,
+        cardBg = AppColors.cardBackground,
+        textMain = AppColors.textPrimary,
+        textSub = AppColors.textSecondary,
+        textMuted = AppColors.textHint,
+        dreamStart = AppColors.dreamCardStart,
+        dreamEnd = AppColors.dreamCardEnd,
+        fortuneStart = AppColors.fortuneCardStart,
+        fortuneEnd = AppColors.fortuneCardEnd;
+
+  const ThemedColors._light()
+      : bg = AppColors.backgroundLight,
+        surfaceColor = AppColors.surfaceLight,
+        cardBg = AppColors.cardBackgroundLight,
+        textMain = AppColors.textPrimaryLight,
+        textSub = AppColors.textSecondaryLight,
+        textMuted = AppColors.textHintLight,
+        dreamStart = AppColors.dreamCardStartLight,
+        dreamEnd = AppColors.dreamCardEndLight,
+        fortuneStart = AppColors.fortuneCardStartLight,
+        fortuneEnd = AppColors.fortuneCardEndLight;
 }

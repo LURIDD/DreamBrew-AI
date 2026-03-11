@@ -64,20 +64,30 @@ class StarBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       fit: StackFit.expand,
       children: [
         // Arka plan gradyantı
         Container(
-          decoration: const BoxDecoration(
-            gradient: AppColors.backgroundGradient,
+          decoration: BoxDecoration(
+            gradient: isDark
+                ? AppColors.backgroundGradient
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [colors.bg, colors.surfaceColor],
+                  ),
           ),
         ),
-        // Yıldız katmanı
-        CustomPaint(
-          painter: StarBackgroundPainter(starCount: starCount),
-          size: Size.infinite,
-        ),
+        // Yıldız katmanı (sadece dark modda)
+        if (isDark)
+          CustomPaint(
+            painter: StarBackgroundPainter(starCount: starCount),
+            size: Size.infinite,
+          ),
         // İçerik
         child,
       ],

@@ -11,9 +11,9 @@ import '../../../../core/widgets/dream_button.dart';
 import '../../../../core/widgets/star_background.dart';
 import '../bloc/onboarding_bloc.dart';
 
-/// DreamBrew AI giriş ekranı.
-/// Ay görseli, uygulama logosu, açıklama metni ve "Get Started" butonu içerir.
-/// Eğlence amaçlı uyarı metni en altta gösterilir.
+/// DreamBrew AI giriş ekranı — 2 sayfalık Onboarding.
+/// Sayfa 1: Karşılama ekranı (Ay görseli, logo, açıklama)
+/// Sayfa 2: Burç seçim ekranı (Grid)
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
@@ -27,66 +27,124 @@ class OnboardingPage extends StatelessWidget {
 }
 
 /// Onboarding'in BlocListener'a sahip asıl görünümü
-class _OnboardingView extends StatelessWidget {
+class _OnboardingView extends StatefulWidget {
   const _OnboardingView();
 
   @override
+  State<_OnboardingView> createState() => _OnboardingViewState();
+}
+
+class _OnboardingViewState extends State<_OnboardingView> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  String? _selectedSign;
+  late ThemedColors colors;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _goToNextPage() {
+    _pageController.animateToPage(
+      1,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _completeOnboarding() async {
+    if (_selectedSign != null) {
+      await sl<PreferencesService>().setZodiacSign(_selectedSign!);
+    }
+    await sl<PreferencesService>().setFirstOpen(false);
+    if (mounted) {
+      context.go('/home');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
+
     return BlocListener<OnboardingBloc, OnboardingState>(
       listener: (context, state) {
-        // OnboardingComplete durumunda Home Dashboard'a geç
         if (state is OnboardingComplete) {
           context.go(AppRouter.home);
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         body: StarBackground(
           child: SafeArea(
             child: Column(
               children: [
-                Expanded(
-                  child: Column(
+                // Sayfa indikatörü
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(2, (index) {
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: _currentPage == index ? 28 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _currentPage == index
+                              ? AppColors.primaryLight
+                              : colors.textMuted.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                // PageView
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (page) {
+                      setState(() => _currentPage = page);
+                    },
                     children: [
-                      // --- Ay + Mistik Daire Görseli ---
-                      _MoonIllustration(),
-                      const SizedBox(height: 48),
+                      // Sayfa 1: Karşılama
+                      _buildWelcomePage(),
 
-                      // --- Logo Metni ---
-                      _LogoText(),
-                      const SizedBox(height: 20),
-
-                      // --- Açıklama Metni ---
-                      _DescriptionText(),
+                      // Sayfa 2: Burç seçimi
+                      _buildZodiacPage(),
                     ],
                   ),
                 ),
 
-                // --- Buton ve Alt Uyarı Bölümü ---
+                // Alt buton
                 Padding(
                   padding: const EdgeInsets.fromLTRB(28, 0, 28, 32),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // "Get Started →" Butonu
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: DreamButton(
-                          label: 'Hemen Başla',
-                          onPressed: () async {
-                            await sl<PreferencesService>().setFirstOpen(false);
-                            if (context.mounted) {
-                              context.go('/home');
+                          label: _currentPage == 0
+                              ? 'Devam Et'
+                              : (_selectedSign != null
+                                  ? 'Hemen Başla ✨'
+                                  : 'Atla'),
+                          onPressed: () {
+                            if (_currentPage == 0) {
+                              _goToNextPage();
+                            } else {
+                              _completeOnboarding();
                             }
                           },
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Eğlence amaçlı uyarı metni
                       Text(
-                        'FOR ENTERTAINMENT PURPOSES ONLY.',
+                        'SADECE EĞLENCE AMAÇLIDIR.',
                         style: AppTextStyles.bodySmall,
                         textAlign: TextAlign.center,
                       ),
@@ -97,6 +155,200 @@ class _OnboardingView extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // Sayfa 1: Karşılama
+  // ============================================================
+
+  Widget _buildWelcomePage() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // --- Ay + Mistik Daire Görseli ---
+        _MoonIllustration(),
+        const SizedBox(height: 48),
+
+        // --- Logo Metni ---
+        _LogoText(),
+        const SizedBox(height: 20),
+
+        // --- Açıklama Metni ---
+        _DescriptionText(),
+      ],
+    );
+  }
+
+  // ============================================================
+  // Sayfa 2: Burç Seçimi
+  // ============================================================
+
+  Widget _buildZodiacPage() {
+    final signs = [
+      {'name': 'Koç', 'icon': '♈', 'date': '21 Mar - 19 Nis'},
+      {'name': 'Boğa', 'icon': '♉', 'date': '20 Nis - 20 May'},
+      {'name': 'İkizler', 'icon': '♊', 'date': '21 May - 20 Haz'},
+      {'name': 'Yengeç', 'icon': '♋', 'date': '21 Haz - 22 Tem'},
+      {'name': 'Aslan', 'icon': '♌', 'date': '23 Tem - 22 Ağu'},
+      {'name': 'Başak', 'icon': '♍', 'date': '23 Ağu - 22 Eyl'},
+      {'name': 'Terazi', 'icon': '♎', 'date': '23 Eyl - 22 Eki'},
+      {'name': 'Akrep', 'icon': '♏', 'date': '23 Eki - 21 Kas'},
+      {'name': 'Yay', 'icon': '♐', 'date': '22 Kas - 21 Ara'},
+      {'name': 'Oğlak', 'icon': '♑', 'date': '22 Ara - 19 Oca'},
+      {'name': 'Kova', 'icon': '♒', 'date': '20 Oca - 18 Şub'},
+      {'name': 'Balık', 'icon': '♓', 'date': '19 Şub - 20 Mar'},
+    ];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+
+          // Başlık
+          Text(
+            'Burcunuzu Seçin',
+            style: GoogleFonts.cinzel(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primaryLight,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            'Size özel kozmik rehberinizi oluşturmamız için\nburcunuzu bilmemiz gerekiyor.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: colors.textSub,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Burç Grid'i (3 sütun)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.85,
+            ),
+            itemCount: signs.length,
+            itemBuilder: (context, index) {
+              final sign = signs[index];
+              final isSelected = _selectedSign == sign['name'];
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _selectedSign = sign['name']);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.2)
+                        : colors.surfaceColor.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primaryLight
+                          : AppColors.primary.withValues(alpha: 0.15),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Burç sembolü
+                      Text(
+                        sign['icon']!,
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: isSelected
+                              ? AppColors.primaryLight
+                              : colors.textSub,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Burç adı
+                      Text(
+                        sign['name']!,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? AppColors.primaryLight
+                              : colors.textMain,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+
+                      // Tarih aralığı
+                      Text(
+                        sign['date']!,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Seçim durumu
+          if (_selectedSign != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle,
+                      color: AppColors.primaryLight, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    '$_selectedSign burcu seçildi',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

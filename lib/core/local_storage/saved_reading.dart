@@ -2,7 +2,7 @@
 ///
 /// Hive ile yerel olarak saklanan rüya/fal okumalarının veri modeli.
 /// Her okuma benzersiz bir [id], tipini belirten [type],
-/// ve favori durumunu tutan [isFavorite] alanı içerir.
+/// favori durumunu tutan [isFavorite] ve opsiyonel [imageBase64] alanı içerir.
 library;
 
 import 'package:hive/hive.dart';
@@ -43,6 +43,10 @@ class SavedReading extends HiveObject {
   /// Okumada tespit edilen sembollerin listesi (örn. kuş, uçmak)
   final List<String>? symbols;
 
+  /// AI ile üretilen görselin Base64 kodlanmış verisi.
+  /// null ise henüz görsel üretilmemiş demektir.
+  String? imageBase64;
+
   SavedReading({
     required this.id,
     required this.type,
@@ -51,6 +55,7 @@ class SavedReading extends HiveObject {
     required this.content,
     this.isFavorite = false,
     this.symbols,
+    this.imageBase64,
   });
 
   /// Favori durumunu tersine çevirir.
@@ -67,6 +72,7 @@ class SavedReading extends HiveObject {
     String? content,
     bool? isFavorite,
     List<String>? symbols,
+    String? imageBase64,
   }) {
     return SavedReading(
       id: id ?? this.id,
@@ -76,6 +82,7 @@ class SavedReading extends HiveObject {
       content: content ?? this.content,
       isFavorite: isFavorite ?? this.isFavorite,
       symbols: symbols ?? this.symbols,
+      imageBase64: imageBase64 ?? this.imageBase64,
     );
   }
 

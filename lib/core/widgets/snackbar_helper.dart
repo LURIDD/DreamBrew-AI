@@ -45,7 +45,7 @@ class SnackbarHelper {
       context,
       message: message,
       icon: Icons.info_outline,
-      backgroundColor: AppColors.surface.withValues(alpha: 0.95),
+      backgroundColor: AppColors.of(context).surfaceColor.withValues(alpha: 0.95),
       iconColor: AppColors.primaryLight,
     );
   }
