@@ -12,7 +12,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/di/service_locator.dart';
 import '../bloc/home_bloc.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/home_state.dart';
 
 /// DreamBrew AI ana ekranı — Astroloji & Mistik temalı Home.
 class HomePage extends StatelessWidget {
@@ -20,8 +23,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => HomeBloc()..add(const HomeLoadRequested()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => HomeBloc()..add(const HomeLoadRequested())),
+        BlocProvider(create: (_) => sl<HomeCubit>()),
+      ],
       child: const _HomeView(),
     );
   }
@@ -245,45 +251,122 @@ class _CosmicGuideCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Placeholder astroloji metni
-          Text(
-            '🌟 Bugün Jüpiter sana cesaret fısıldıyor — '
-            'yeni bir adım atmak için yıldızlar senden yana. '
-            'Ancak Merkür retrosu etkisini hâlâ hissettiriyor; '
-            'önemli kararları bir gün daha bekletmekte fayda var.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.65,
-            ),
+          // Dinamik astroloji metni
+          BlocBuilder<HomeCubit, HomeCubitState>(
+            builder: (context, state) {
+              return Text(
+                state.dailyGuide,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.65,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 14),
 
-          // Alt not
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.textHint.withValues(alpha: 0.6),
-                size: 14,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Burcuna özel yorum için burç seçimini yakında açacağız.',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textHint,
-                    letterSpacing: 0.2,
+          // Alt not / Burç Seçme Butonu
+          GestureDetector(
+            onTap: () => _showZodiacPicker(context),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.edit_calendar,
+                  color: AppColors.primaryLight.withValues(alpha: 0.8),
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: BlocBuilder<HomeCubit, HomeCubitState>(
+                    builder: (context, state) {
+                      final hasSign = state.zodiacSign != null;
+                      return Text(
+                        hasSign 
+                            ? '${state.zodiacSign} burcu için özel yorumunuz. Değiştirmek için dokunun.' 
+                            : 'Burcunuzu seçin ve size özel kozmik rehberinizi okuyun.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryLight,
+                          letterSpacing: 0.2,
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showZodiacPicker(BuildContext context) {
+    final signs = [
+      'Koç', 'Boğa', 'İkizler', 'Yengeç', 'Aslan', 'Başak',
+      'Terazi', 'Akrep', 'Yay', 'Oğlak', 'Kova', 'Balık'
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Burcunuzu Seçin',
+                style: GoogleFonts.cinzel(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryLight,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: signs.map((sign) {
+                  return InkWell(
+                    onTap: () {
+                      context.read<HomeCubit>().setZodiacSign(sign);
+                      Navigator.pop(bottomSheetContext);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        sign,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 }

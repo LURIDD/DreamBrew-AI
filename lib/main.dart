@@ -8,6 +8,7 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/history/presentation/bloc/history_bloc.dart';
 
 /// DreamBrew AI — Uygulama giriş noktası
@@ -46,17 +47,30 @@ class DreamBrewApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<HistoryBloc>(
-      create: (_) => sl<HistoryBloc>()..add(const LoadHistory()),
-      child: MaterialApp.router(
-        title: 'DreamBrew AI',
-        debugShowCheckedModeBanner: false,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<HistoryBloc>(
+          create: (_) => sl<HistoryBloc>()..add(const LoadHistory()),
+        ),
+        BlocProvider<ThemeCubit>(
+          create: (_) => sl<ThemeCubit>(),
+        ),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: 'DreamBrew AI',
+            debugShowCheckedModeBanner: false,
 
-        // Material 3 karanlık tema
-        theme: AppTheme.darkTheme,
+            // Tema ayarları (Dinamik)
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
 
-        // go_router yapılandırması
-        routerConfig: AppRouter.router,
+            // go_router yapılandırması
+            routerConfig: AppRouter.router,
+          );
+        },
       ),
     );
   }

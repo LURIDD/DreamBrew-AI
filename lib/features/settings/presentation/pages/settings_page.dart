@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
+import '../../../../core/theme/theme_cubit.dart';
 import '../../../history/presentation/bloc/history_bloc.dart';
 
 /// Ayarlar ana sayfası.
@@ -83,17 +84,6 @@ class _SettingsView extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: AppColors.textHint.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'Made with ✨ & ☕',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textHint.withValues(alpha: 0.4),
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -216,28 +206,30 @@ class _SettingsView extends StatelessWidget {
   }
 
   // ============================================================
-  // Tema Anahtarı (Opsiyonel)
+  // Tema Anahtarı
   // ============================================================
 
   Widget _buildThemeToggleTile(BuildContext context) {
-    return _SettingsTile(
-      icon: Icons.dark_mode_outlined,
-      iconColor: AppColors.primaryLight,
-      title: 'Karanlık Tema',
-      subtitle: 'Sistem temasına bağlı çalışır',
-      trailing: Switch(
-        value: true, // Şu an sadece karanlık tema aktif
-        onChanged: (value) {
-          SnackbarHelper.showInfo(
-            context,
-            'Tema ayarları yakında aktif olacak!',
-          );
-        },
-        activeThumbColor: AppColors.primary,
-        activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
-        inactiveThumbColor: AppColors.textHint,
-        inactiveTrackColor: AppColors.textHint.withValues(alpha: 0.2),
-      ),
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        final isDarkMode = themeMode == ThemeMode.dark;
+        return _SettingsTile(
+          icon: Icons.dark_mode_outlined,
+          iconColor: AppColors.primaryLight,
+          title: 'Karanlık Tema',
+          subtitle: 'Açık / Koyu Tema Seçimi',
+          trailing: Switch(
+            value: isDarkMode,
+            onChanged: (value) {
+              context.read<ThemeCubit>().toggleTheme();
+            },
+            activeThumbColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
+            inactiveThumbColor: AppColors.textHint,
+            inactiveTrackColor: AppColors.textHint.withValues(alpha: 0.2),
+          ),
+        );
+      },
     );
   }
 

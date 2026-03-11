@@ -38,8 +38,9 @@ class MainLayout extends StatelessWidget {
       floatingActionButton: _buildCenterFAB(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // FAB'ın BottomAppBar notch üzerinde doğru konumlanması için
-      extendBody: true,
+      // extendBody: true animasyon/layout fazında geometry crash'e neden olabiliyor.
+      extendBody: false,
+      resizeToAvoidBottomInset: false,
     );
   }
 

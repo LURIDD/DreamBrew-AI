@@ -16,6 +16,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../visualization/presentation/cubit/visualization_cubit.dart';
 import '../../../visualization/presentation/widgets/visualization_view.dart';
 import '../bloc/history_bloc.dart';
@@ -64,7 +65,13 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             scrolledUnderElevation: 0,
             centerTitle: true,
             leading: IconButton(
-              onPressed: () => context.pop(),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(AppRouter.home);
+                }
+              },
               icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             ),
             title: Text(

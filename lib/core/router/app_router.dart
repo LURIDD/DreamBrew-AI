@@ -21,6 +21,8 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../widgets/main_layout.dart';
+import '../di/service_locator.dart';
+import '../local_storage/preferences_service.dart';
 
 /// DreamBrew AI uygulama yönlendirme yapılandırması.
 /// go_router + StatefulShellRoute kullanılarak sekme tabanlı navigasyon.
@@ -46,8 +48,8 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
 
-    /// İlk açılışta Onboarding ekranı gösterilir
-    initialLocation: onboarding,
+    /// İlk açılışta Onboarding ekranı, sonraki gelişlerde Home
+    initialLocation: sl<PreferencesService>().isFirstOpen ? onboarding : home,
     debugLogDiagnostics: false,
     routes: [
       // ─── Onboarding (shell dışı) ────────────────────────────

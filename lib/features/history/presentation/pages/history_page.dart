@@ -43,9 +43,17 @@ class _HistoryView extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: AppColors.background,
           elevation: 0,
-          scrolledUnderElevation: 0,
           centerTitle: true,
-          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRouter.home);
+              }
+            },
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          ),
           title: Text(
             'History',
             style: GoogleFonts.cinzel(
