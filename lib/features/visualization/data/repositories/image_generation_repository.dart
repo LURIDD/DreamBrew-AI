@@ -1,55 +1,48 @@
-/// DreamBrew AI — Pollinations AI Görsel Üretim Implementasyonu
+/// DreamBrew AI — Gemini Image Generation Repository
 ///
-/// Ücretsiz bir endpoint olan image.pollinations.ai kullanarak
-/// prompt tabanlı görsel üretimi gerçekleştirir.
+/// Google Gemini API'nin `gemini-2.5-flash-preview-image-generation` modeline istek atarak
+/// anahtar kelimelerden mistik bir görsel üretir.
+/// Üretilen görsel Base64 formatında döndürülür.
 library;
 
-import 'dart:typed_data';
-import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 import '../../domain/repositories/i_image_generation_repository.dart';
 
-/// Pollinations AI tabanlı ImageGenerationRepository gerçekleştirimi
+/// Gemini API tabanlı görsel üretim implementasyonu.
+///
+/// [ApiClient] üzerinden Gemini Image Generation endpoint'ine
+/// POST isteği gönderir. Dönen JSON yanıtından Base64 görsel
+/// verisini parse ederek döndürür.
 class ImageGenerationRepository implements IImageGenerationRepository {
-  final Dio _dio;
+  final ApiClient _apiClient;
 
-  ImageGenerationRepository(this._dio);
+  ImageGenerationRepository(this._apiClient);
 
   @override
-  Future<Uint8List> generateImage(List<String> keywords) async {
-    try {
-      // 1. Prompt Hazırlığı
-      // Eğer kelime yoksa varsayılan mistik bir manzara üret.
-      // Eğer kelime varsa, sonuna güzel bir rüya/fal atmosferi katan kelimeler ekle.
-      final basePrompt = keywords.isEmpty
-          ? 'mystical dreamscape with stars and moon'
-          : keywords.join(', ');
-      
-      final enhancedPrompt = '$basePrompt, mystical, highly detailed, beautiful digital art, atmospheric lighting, dreamy background';
-      
-      // 2. URL Encode (Örn: boşluklar %20 olur)
-      final encodedPrompt = Uri.encodeComponent(enhancedPrompt);
-      
-      // 3. İstek Atma
-      // Pollinations AI, GET isteğiyle doğrudan resmi döndürür.
-      final url = 'https://image.pollinations.ai/prompt/$encodedPrompt';
-      
-      final response = await _dio.get(
-        url,
-        options: Options(
-          responseType: ResponseType.bytes,
-          // Pollinations biraz ağır olabilir, timeout sürelerini uzun tutalım
-          receiveTimeout: const Duration(seconds: 45),
-          sendTimeout: const Duration(seconds: 45),
-        ),
-      );
+  Future<String> generateImage(List<String> keywords) async {
+    // 1. Prompt Hazırlığı
+    final basePrompt = keywords.isEmpty
+        ? 'mystical dreamscape with stars and moon'
+        : keywords.join(', ');
 
-      if (response.statusCode == 200 && response.data != null) {
-        return Uint8List.fromList(response.data as List<int>);
-      } else {
-        throw Exception('Görsel üretilemedi. Sunucu hatası: ${response.statusCode}');
-      }
+    final prompt = 'Generate a mystical, highly detailed digital art image '
+        'inspired by these symbols: $basePrompt. '
+        'The style should be ethereal, dreamy, with atmospheric lighting, '
+        'fantasy illustration vibes, and a magical cosmic background. '
+        'Do NOT include any text or writing in the image.';
+
+    // 2. Gemini Image API'ye istek at ve Base64 görsel al
+    try {
+      final base64Image = await _apiClient.generateImageFromPrompt(
+        prompt: prompt,
+      );
+      return base64Image;
     } catch (e) {
-      throw Exception('Görsel üretimi başarısız oldu: $e');
+      // Hata mesajını kullanıcı dostu hale getir
+      throw Exception(
+        'Kozmik bağlantıda bir sorun oluştu, '
+        'lütfen internetinizi kontrol edip tekrar deneyin.',
+      );
     }
   }
 }

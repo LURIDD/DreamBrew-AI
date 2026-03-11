@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/local_storage/preferences_service.dart';
 import '../../../../core/widgets/dream_button.dart';
 import '../../../../core/widgets/star_background.dart';
 import '../bloc/onboarding_bloc.dart';
@@ -68,17 +70,17 @@ class _OnboardingView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // "Get Started →" Butonu
-                      BlocBuilder<OnboardingBloc, OnboardingState>(
-                        builder: (context, state) {
-                          return DreamButton(
-                            label: 'Get Started',
-                            onPressed: () {
-                              context.read<OnboardingBloc>().add(
-                                const OnboardingStarted(),
-                              );
-                            },
-                          );
-                        },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: DreamButton(
+                          label: 'Hemen Başla',
+                          onPressed: () async {
+                            await sl<PreferencesService>().setFirstOpen(false);
+                            if (context.mounted) {
+                              context.go('/home');
+                            }
+                          },
+                        ),
                       ),
                       const SizedBox(height: 20),
 

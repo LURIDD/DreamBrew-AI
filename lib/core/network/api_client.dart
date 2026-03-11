@@ -36,8 +36,11 @@ class ApiClient {
   static const _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/';
 
-  /// Kullanılacak model adı
+  /// Kullanılacak metin modeli adı
   static const _textModel = 'gemini-2.5-flash';
+
+  /// Görsel üretim modeli adı
+  static const _imageModel = 'gemini-2.5-flash-image';
 
   ApiClient() {
     _dio = Dio(
@@ -167,6 +170,104 @@ class ApiClient {
       rethrow;
     } on DioException catch (e) {
       throw _handleDioError(e);
+    } catch (e) {
+      throw InvalidResponseException(originalError: e);
+    }
+  }
+
+  /// Gemini API'ye metin tabanlı istek gönderip görsel ürettirir.
+  ///
+  /// [prompt] — Görsel üretimi için kullanılacak açıklama metni.
+  ///
+  /// Gemini `gemini-2.5-flash-preview-image-generation` modelini kullanır.
+  /// Dönen yanıttaki `inlineData` alanından Base64 görsel verisini çıkarır.
+  ///
+  /// Hata durumunda uygun [AppException] fırlatır.
+  Future<String> generateImageFromPrompt({
+    required String prompt,
+  }) async {
+    try {
+      // Görsel üretim için timeout'ları uzun tut
+      final response = await _dio.post<Map<String, dynamic>>(
+        '$_imageModel:generateContent?key=$_apiKey',
+        data: {
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt},
+              ],
+            },
+          ],
+          'generationConfig': {
+            'responseModalities': ['TEXT', 'IMAGE'],
+            'temperature': 1.0,
+            'topP': 0.95,
+          },
+        },
+        options: Options(
+          sendTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+      );
+
+      return _extractImageFromResponse(response.data!);
+    } on AppException {
+      rethrow;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw InvalidResponseException(originalError: e);
+    }
+  }
+
+  /// Gemini Image API yanıtından Base64 görsel verisini çıkarır.
+  ///
+  /// Yanıt formatı:
+  /// ```json
+  /// {
+  ///   "candidates": [{
+  ///     "content": {
+  ///       "parts": [
+  ///         {"text": "..."},
+  ///         {"inlineData": {"mimeType": "image/png", "data": "BASE64..."}}
+  ///       ]
+  ///     }
+  ///   }]
+  /// }
+  /// ```
+  String _extractImageFromResponse(Map<String, dynamic> data) {
+    try {
+      final candidates = data['candidates'] as List?;
+      if (candidates == null || candidates.isEmpty) {
+        throw const InvalidResponseException(
+          message: 'AI görsel üretemedi. Kozmik sinyaller kayboldu… 🌠',
+        );
+      }
+
+      final content = candidates[0]['content'] as Map<String, dynamic>?;
+      final parts = content?['parts'] as List?;
+      if (parts == null || parts.isEmpty) {
+        throw const InvalidResponseException(
+          message: 'AI yanıtında görsel verisi bulunamadı.',
+        );
+      }
+
+      // parts listesinde inlineData içeren part'ı bul
+      for (final part in parts) {
+        final inlineData = part['inlineData'] as Map<String, dynamic>?;
+        if (inlineData != null) {
+          final base64Data = inlineData['data'] as String?;
+          if (base64Data != null && base64Data.isNotEmpty) {
+            return base64Data;
+          }
+        }
+      }
+
+      throw const InvalidResponseException(
+        message: 'Yanıtta görsel verisi bulunamadı. Lütfen tekrar deneyin.',
+      );
+    } on AppException {
+      rethrow;
     } catch (e) {
       throw InvalidResponseException(originalError: e);
     }

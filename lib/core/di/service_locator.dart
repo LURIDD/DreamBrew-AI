@@ -15,11 +15,15 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/api_client.dart';
+import '../local_storage/preferences_service.dart';
 import '../../features/dream/data/repositories/dream_repository_impl.dart';
 import '../../features/dream/domain/repositories/i_dream_repository.dart';
 import '../../features/dream/presentation/bloc/dream_bloc.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
+import '../theme/theme_cubit.dart';
 import '../../features/fortune/data/repositories/fortune_repository_impl.dart';
 import '../../features/fortune/domain/repositories/i_fortune_repository.dart';
 import '../../features/fortune/presentation/bloc/fortune_bloc.dart';
@@ -52,11 +56,40 @@ final GetIt sl = GetIt.instance;
 /// - `registerFactory`: Her çağrıda yeni bir örnek oluşturulur.
 ///   BLoC'lar için ideal seçimdir (her ekran kendi BLoC'unu almalı).
 Future<void> setupLocator() async {
-  // ─── Core: Ağ Katmanı ─────────────────────────────────────────────────
+  // ─── Core: Ağ Katmanı & Preferences ───────────────────────────────────
   //
+  // SharedPreferences'i bekle ve servisi oluştur
+  final prefs = await SharedPreferences.getInstance();
+  sl.registerLazySingleton<PreferencesService>(() => PreferencesService(prefs));
+
+  // Dio HTTP istemcisini genel istekler (örn: Görsel üretimi) için kaydet
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 150),
+      receiveTimeout: const Duration(seconds: 150),
+    ));
+    // 1. ADIM: Dio Interceptor ile Loglama
+    // İstek ve cevapları, header'ları ve body detaylarını konsolda görmek için:
+    dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      error: true,
+    ));
+    return dio;
+  });
+
   // Gemini API ile iletişim kuran merkezi HTTP istemcisi.
   // Tüm repository'ler bu istemciyi paylaşır.
   sl.registerLazySingleton<ApiClient>(() => ApiClient());
+
+  // Core Features
+  sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit(sl<PreferencesService>()));
+
+  // Home Feature 
+  sl.registerFactory<HomeCubit>(() => HomeCubit(sl<PreferencesService>()));
 
   // ─── Dream Feature ───────────────────────────────────────────────────────
   //
@@ -95,10 +128,18 @@ Future<void> setupLocator() async {
 
   // ==========================================================
   // Visualization Feature DI
+  //
+  // ÖNEMLİ (Kayıt Sıralaması):
+  // Cubit oluşturulurken repository'ye ihtiyaç duyduğu için,
+  // Repository'nin her zaman Cubit'ten ÖNCE kaydedilmesi zorunludur!
+  // Aksi halde get_it bağımlılığı bulamaz ve hata fırlatır.
   // ==========================================================
+  
+  // 1. Önce Repository'i kaydet (ApiClient üzerinden Gemini API'ye erişir)
   sl.registerLazySingleton<IImageGenerationRepository>(
-      () => ImageGenerationRepository(sl<Dio>()));
+      () => ImageGenerationRepository(sl<ApiClient>()));
       
+  // 2. Sonra Cubit'i kaydet (Repository'i sl üzerinden alır)
   sl.registerFactory<VisualizationCubit>(
       () => VisualizationCubit(sl<IImageGenerationRepository>()));
 }

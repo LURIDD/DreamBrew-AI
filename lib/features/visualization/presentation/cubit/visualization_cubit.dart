@@ -1,6 +1,7 @@
 /// DreamBrew AI — Visualization Cubit
 ///
 /// Görsel üretim işlemlerini UI'dan soyutlar ve state'i yönetir.
+/// Gemini API'den Base64 formatında görsel alır.
 library;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,11 +20,13 @@ class VisualizationCubit extends Cubit<VisualizationState> {
   Future<void> generateImage(List<String> keywords) async {
     emit(VisualizationLoading());
     try {
-      final imageBytes = await _repository.generateImage(keywords);
-      emit(VisualizationLoaded(imageBytes: imageBytes));
+      final imageBase64 = await _repository.generateImage(keywords);
+      emit(VisualizationLoaded(imageBase64: imageBase64));
     } catch (e) {
       // Hatayı kullanıcıya göstermek için sadeleştir
-      emit(VisualizationError(e.toString().replaceAll('Exception: ', '')));
+      emit(VisualizationError(
+        e.toString().replaceAll('Exception: ', ''),
+      ));
     }
   }
   
