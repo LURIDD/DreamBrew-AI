@@ -19,6 +19,7 @@ import 'saved_reading.dart';
 ///   4 → content (String)
 ///   5 → isFavorite (bool)
 ///   6 → symbols (List of String)
+///   7 → imageBase64 (String?) — AI ile üretilen görselin Base64 verisi
 class SavedReadingAdapter extends TypeAdapter<SavedReading> {
   @override
   final int typeId = 0;
@@ -39,13 +40,17 @@ class SavedReadingAdapter extends TypeAdapter<SavedReading> {
       content: fields[4] as String,
       isFavorite: fields[5] as bool,
       symbols: (fields[6] as List?)?.cast<String>(),
+      // Alan 7 eski kayıtlarda olmayabilir — null-safe okuma
+      imageBase64: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SavedReading obj) {
+    // Toplam alan sayısı: imageBase64 null değilse 8, null ise 7
+    final hasImage = obj.imageBase64 != null;
     writer
-      ..writeByte(6) // alan sayısı
+      ..writeByte(hasImage ? 8 : 7) // alan sayısı
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -60,5 +65,11 @@ class SavedReadingAdapter extends TypeAdapter<SavedReading> {
       ..write(obj.isFavorite)
       ..writeByte(6)
       ..write(obj.symbols);
+    
+    if (hasImage) {
+      writer
+        ..writeByte(7)
+        ..write(obj.imageBase64);
+    }
   }
 }

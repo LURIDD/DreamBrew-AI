@@ -70,6 +70,15 @@ class HiveService {
     await _box.clear();
   }
 
+  /// Bir okumaya AI ile üretilen görselin Base64 verisini kaydeder.
+  Future<void> updateImageBase64(String id, String base64) async {
+    final reading = _box.get(id);
+    if (reading != null) {
+      reading.imageBase64 = base64;
+      await reading.save();
+    }
+  }
+
   /// Box'taki toplam okuma sayısını döner.
   int get count => _box.length;
 }

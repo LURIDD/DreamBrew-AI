@@ -26,13 +26,6 @@ void main() async {
   // Dependency Injection: tüm repository ve servisleri kaydet
   await setupLocator();
 
-  // Durum çubuğunu saydam ve açık ikonlu yap (karanlık tema uyumu)
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ),
-  );
 
   // Yalnızca dikey yönelimi destekle
   SystemChrome.setPreferredOrientations([

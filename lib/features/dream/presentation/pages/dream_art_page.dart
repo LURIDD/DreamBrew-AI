@@ -25,14 +25,16 @@ class DreamArtPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: colors.textMain),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -50,7 +52,7 @@ class DreamArtPage extends StatelessWidget {
         child: Column(
           children: [
             // Görsel placeholder alanı
-            _buildImagePlaceholder(),
+            _buildImagePlaceholder(colors),
             const SizedBox(height: 28),
 
             // Başlık
@@ -71,7 +73,7 @@ class DreamArtPage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium.copyWith(
                 fontSize: 14,
-                color: AppColors.textHint,
+                color: colors.textMuted,
               ),
             ),
             const SizedBox(height: 28),
@@ -88,6 +90,7 @@ class DreamArtPage extends StatelessWidget {
 
             // Share Image butonu
             _buildSecondaryButton(
+              colors: colors,
               icon: Icons.ios_share,
               label: 'Share Image',
               onTap: () {
@@ -104,14 +107,14 @@ class DreamArtPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
+                  Icon(Icons.refresh, size: 18, color: colors.textSub),
                   const SizedBox(width: 8),
                   Text(
                     'Generate Again',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                     ),
                   ),
                 ],
@@ -124,7 +127,7 @@ class DreamArtPage extends StatelessWidget {
   }
 
   /// Görsel placeholder — mistik gradient arka plan + ikon
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder(ThemedColors colors) {
     return Container(
       width: double.infinity,
       height: 320,
@@ -175,7 +178,7 @@ class DreamArtPage extends StatelessWidget {
                 'AI Art Generation',
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: AppColors.textHint,
+                  color: colors.textMuted,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -184,7 +187,7 @@ class DreamArtPage extends StatelessWidget {
                 'Coming Soon',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.textHint.withValues(alpha: 0.6),
+                  color: colors.textMuted.withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -230,6 +233,7 @@ class DreamArtPage extends StatelessWidget {
 
   /// İkincil çerçeveli buton
   Widget _buildSecondaryButton({
+    required ThemedColors colors,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
@@ -240,7 +244,7 @@ class DreamArtPage extends StatelessWidget {
         height: 56,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.5),
+          color: colors.surfaceColor.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.3),
@@ -250,12 +254,12 @@ class DreamArtPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.textSecondary, size: 20),
+            Icon(icon, color: colors.textSub, size: 20),
             const SizedBox(width: 10),
             Text(
               label,
               style: AppTextStyles.buttonPrimary.copyWith(
-                color: AppColors.textSecondary,
+                color: colors.textSub,
               ),
             ),
           ],

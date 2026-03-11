@@ -36,12 +36,14 @@ class _HistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: colors.bg,
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
@@ -52,20 +54,20 @@ class _HistoryView extends StatelessWidget {
                 context.go(AppRouter.home);
               }
             },
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back, color: colors.textMain),
           ),
           title: Text(
-            'History',
+            'Geçmiş',
             style: GoogleFonts.cinzel(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: colors.textMain,
               letterSpacing: 1.0,
             ),
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(48),
-            child: _buildTabBar(),
+            child: _buildTabBar(colors),
           ),
         ),
         body: BlocConsumer<HistoryBloc, HistoryState>(
@@ -84,19 +86,18 @@ class _HistoryView extends StatelessWidget {
             if (state is HistoryLoaded) {
               return TabBarView(
                 children: [
-                  // Dreams sekmesi
                   _ReadingList(
                     readings: state.dreamReadings,
                     emptyIcon: Icons.nightlight_round,
-                    emptyTitle: 'No Dream Readings Yet',
-                    emptySubtitle: 'Your interpreted dreams will\nappear here',
+                    emptyTitle: 'Henüz Rüya Yorumu Yok',
+                    emptySubtitle: 'Yorumlanan rüyalarınız\nburada görünecek',
                   ),
                   // Coffee Readings sekmesi
                   _ReadingList(
                     readings: state.fortuneReadings,
                     emptyIcon: Icons.coffee,
-                    emptyTitle: 'No Coffee Readings Yet',
-                    emptySubtitle: 'Your coffee cup readings will\nappear here',
+                    emptyTitle: 'Henüz Kahve Falı Yok',
+                    emptySubtitle: 'Kahve falı yorumlarınız\nburada görünecek',
                   ),
                 ],
               );
@@ -108,14 +109,14 @@ class _HistoryView extends StatelessWidget {
                 _ReadingList(
                   readings: const [],
                   emptyIcon: Icons.nightlight_round,
-                  emptyTitle: 'No Dream Readings Yet',
-                  emptySubtitle: 'Your interpreted dreams will\nappear here',
+                  emptyTitle: 'Henüz Rüya Yorumu Yok',
+                  emptySubtitle: 'Yorumlanan rüyalarınız\nburada görünecek',
                 ),
                 _ReadingList(
                   readings: const [],
                   emptyIcon: Icons.coffee,
-                  emptyTitle: 'No Coffee Readings Yet',
-                  emptySubtitle: 'Your coffee cup readings will\nappear here',
+                  emptyTitle: 'Henüz Kahve Falı Yok',
+                  emptySubtitle: 'Kahve falı yorumlarınız\nburada görünecek',
                 ),
               ],
             );
@@ -126,7 +127,7 @@ class _HistoryView extends StatelessWidget {
   }
 
   /// Üstteki TabBar widget'ı — tasarımdaki mor çizgi + aktif sekme rengi
-  Widget _buildTabBar() {
+  Widget _buildTabBar(ThemedColors colors) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: TabBar(
@@ -134,7 +135,7 @@ class _HistoryView extends StatelessWidget {
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textHint,
+        unselectedLabelColor: colors.textMuted,
         labelStyle: GoogleFonts.inter(
           fontSize: 15,
           fontWeight: FontWeight.w600,
@@ -145,8 +146,8 @@ class _HistoryView extends StatelessWidget {
         ),
         dividerColor: AppColors.primary.withValues(alpha: 0.15),
         tabs: const [
-          Tab(text: 'Dreams'),
-          Tab(text: 'Coffee Readings'),
+          Tab(text: 'Rüyalar'),
+          Tab(text: 'Kahve Falları'),
         ],
       ),
     );
@@ -208,6 +209,7 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final isDream = reading.type == SavedReadingType.dream;
 
     return GestureDetector(
@@ -217,9 +219,17 @@ class _HistoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: isDream
-              ? AppColors.dreamCardGradient
-              : AppColors.fortuneCardGradient,
+          // Koyu tema ise eski dark gradient'ı, açık ise light gradient'ı kullan
+          gradient: Theme.of(context).brightness == Brightness.dark
+              ? (isDream
+                  ? AppColors.dreamCardGradient
+                  : AppColors.fortuneCardGradient)
+              : LinearGradient(
+                  colors: [
+                    colors.surfaceColor,
+                    colors.surfaceColor.withValues(alpha: 0.8),
+                  ],
+                ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: (isDream ? AppColors.primary : AppColors.secondary)
@@ -257,7 +267,7 @@ class _HistoryCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: colors.textMain,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -265,7 +275,10 @@ class _HistoryCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     reading.content,
-                    style: AppTextStyles.cardDescription.copyWith(fontSize: 13),
+                    style: AppTextStyles.cardDescription.copyWith(
+                      fontSize: 13,
+                      color: colors.textSub, // override color for light theme contrast
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -284,7 +297,7 @@ class _HistoryCard extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textHint,
+                    color: colors.textMuted,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -300,7 +313,7 @@ class _HistoryCard extends StatelessWidget {
                     reading.isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: reading.isFavorite
                         ? AppColors.primary
-                        : AppColors.textHint,
+                        : colors.textMuted,
                     size: 22,
                   ),
                 ),
@@ -350,6 +363,8 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -382,7 +397,7 @@ class _EmptyState extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary.withValues(alpha: 0.8),
+                color: colors.textMain.withValues(alpha: 0.8),
               ),
               textAlign: TextAlign.center,
             ),
@@ -394,7 +409,7 @@ class _EmptyState extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textHint,
+                color: colors.textMuted,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,

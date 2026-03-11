@@ -43,13 +43,14 @@ class _DreamInputView extends StatefulWidget {
 
 class _DreamInputViewState extends State<_DreamInputView> {
   final _dreamController = TextEditingController();
-  String _selectedStyle = 'Mystical';
+  String _selectedStyle = 'Mistik';
+  late ThemedColors colors;
 
   /// Yorum tarzları — ikon ve etiket eşleşmeleri
   static const _styles = [
-    {'label': 'Mystical', 'icon': Icons.auto_awesome},
-    {'label': 'Fun', 'icon': Icons.emoji_emotions},
-    {'label': 'Psychological', 'icon': Icons.psychology},
+    {'label': 'Mistik', 'icon': Icons.auto_awesome},
+    {'label': 'Eğlenceli', 'icon': Icons.emoji_emotions},
+    {'label': 'Derin', 'icon': Icons.psychology},
   ];
 
   @override
@@ -85,6 +86,8 @@ class _DreamInputViewState extends State<_DreamInputView> {
 
   @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
+
     return BlocListener<DreamBloc, DreamState>(
       listener: (context, state) {
         if (state is DreamSuccess) {
@@ -101,20 +104,20 @@ class _DreamInputViewState extends State<_DreamInputView> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
 
         // AppBar — geri butonu ve başlık
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: colors.bg,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back, color: colors.textMain),
             onPressed: () => context.pop(),
           ),
           title: Text(
-            'Dream Interpretation',
+            'Rüya Yorumu',
             style: GoogleFonts.cinzel(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -137,10 +140,11 @@ class _DreamInputViewState extends State<_DreamInputView> {
                       // Başlık
                       Center(
                         child: Text(
-                          'Dream Interpretation',
+                          'Rüya Yorumu',
                           style: AppTextStyles.headlineMedium.copyWith(
                             fontWeight: FontWeight.w800,
                             fontSize: 26,
+                            color: colors.textMain,
                           ),
                         ),
                       ),
@@ -149,11 +153,11 @@ class _DreamInputViewState extends State<_DreamInputView> {
                       // Alt metin
                       Center(
                         child: Text(
-                          'Tell me what you saw while you were sleeping,\nand I\'ll reveal its meaning.',
+                          'Uyurken neler gördüğünü anlat,\nben de senin için yorumlayayım.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMedium.copyWith(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: colors.textSub,
                             height: 1.5,
                           ),
                         ),
@@ -166,8 +170,11 @@ class _DreamInputViewState extends State<_DreamInputView> {
 
                       // Yorum tarzı seçimi
                       Text(
-                        'Reading Style',
-                        style: AppTextStyles.cardTitle.copyWith(fontSize: 18),
+                        'Yorum Tarzı',
+                        style: AppTextStyles.cardTitle.copyWith(
+                          fontSize: 18,
+                          color: colors.textMain,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       _buildStyleChips(),
@@ -197,7 +204,7 @@ class _DreamInputViewState extends State<_DreamInputView> {
           color: AppColors.primary.withValues(alpha: 0.4),
           width: 1.5,
         ),
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: colors.surfaceColor.withValues(alpha: 0.5),
       ),
       child: Stack(
         children: [
@@ -206,29 +213,19 @@ class _DreamInputViewState extends State<_DreamInputView> {
             maxLines: 7,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: AppColors.textPrimary,
+              color: colors.textMain,
               height: 1.6,
             ),
             decoration: InputDecoration(
               hintText:
-                  'Describe your dream... (e.g., I was flying\nover a city made of glass...)',
+                  'Rüyanızı anlatın... (örn. Camdan yapılmış bir\nşehrin üzerinde uçuyordum...)',
               hintStyle: GoogleFonts.inter(
                 fontSize: 15,
-                color: AppColors.textHint,
+                color: colors.textMuted,
                 height: 1.6,
               ),
               contentPadding: const EdgeInsets.all(18),
               border: InputBorder.none,
-            ),
-          ),
-          // Mikrofon ikonu — sağ alt köşe
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: Icon(
-              Icons.mic,
-              color: AppColors.textHint.withValues(alpha: 0.7),
-              size: 22,
             ),
           ),
         ],
@@ -254,7 +251,7 @@ class _DreamInputViewState extends State<_DreamInputView> {
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.primary
-                  : AppColors.surface.withValues(alpha: 0.6),
+                  : colors.surfaceColor.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isSelected
@@ -278,7 +275,7 @@ class _DreamInputViewState extends State<_DreamInputView> {
                 Icon(
                   icon,
                   size: 16,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                  color: isSelected ? Colors.white : colors.textSub,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -286,7 +283,7 @@ class _DreamInputViewState extends State<_DreamInputView> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : colors.textSub,
                   ),
                 ),
               ],
@@ -341,7 +338,7 @@ class _DreamInputViewState extends State<_DreamInputView> {
                         const Icon(Icons.star, color: Colors.white, size: 20),
                         const SizedBox(width: 10),
                         Text(
-                          'Interpret Dream',
+                          'Yorumla',
                           style: AppTextStyles.buttonPrimary,
                         ),
                       ],

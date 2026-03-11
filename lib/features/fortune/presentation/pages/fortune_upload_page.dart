@@ -47,13 +47,14 @@ class _FortuneUploadView extends StatefulWidget {
 }
 
 class _FortuneUploadViewState extends State<_FortuneUploadView> {
-  String _selectedStyle = 'Mystical';
+  String _selectedStyle = 'Mistik';
+  late ThemedColors colors;
 
   /// Yorum tarzları — ikon ve etiket eşleşmeleri
   static const _styles = [
-    {'label': 'Mystical', 'icon': Icons.auto_awesome},
-    {'label': 'Fun', 'icon': Icons.emoji_emotions},
-    {'label': 'Deep', 'icon': Icons.psychology},
+    {'label': 'Mistik', 'icon': Icons.auto_awesome},
+    {'label': 'Eğlenceli', 'icon': Icons.emoji_emotions},
+    {'label': 'Derin', 'icon': Icons.psychology},
   ];
 
   /// Fal analizi başlat — validasyon + BLoC event
@@ -68,6 +69,8 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
 
   @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
+
     return BlocListener<FortuneBloc, FortuneState>(
       listener: (context, state) {
         if (state is FortuneSuccess) {
@@ -90,7 +93,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         appBar: _buildAppBar(context),
         body: SafeArea(
           child: Column(
@@ -116,8 +119,11 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
 
                       // Yorum tarzı seçimi
                       Text(
-                        'Reading Style',
-                        style: AppTextStyles.cardTitle.copyWith(fontSize: 18),
+                        'Yorum Tarzı',
+                        style: AppTextStyles.cardTitle.copyWith(
+                          fontSize: 18,
+                          color: colors.textMain,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       _buildStyleChips(),
@@ -141,13 +147,13 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
   /// AppBar — Geri butonu ve logo
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(
+        icon: Icon(
           Icons.chevron_left,
-          color: AppColors.textPrimary,
+          color: colors.textMain,
           size: 28,
         ),
         onPressed: () => context.pop(),
@@ -190,7 +196,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                 width: 1.5,
                 // Dashed border efekti için CustomPainter kullanacağız
               ),
-              color: AppColors.surface.withValues(alpha: 0.3),
+              color: colors.surfaceColor.withValues(alpha: 0.3),
             ),
             child: hasImage && imagePath != null
                 ? ClipRRect(
@@ -219,7 +225,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.surface.withValues(alpha: 0.8),
+                              color: colors.surfaceColor.withValues(alpha: 0.8),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -257,20 +263,21 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Upload Cup Photo',
+                            'Fincan Fotoğrafı Yükle',
                             style: AppTextStyles.cardTitle.copyWith(
                               fontSize: 20,
+                              color: colors.textMain,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 32),
                             child: Text(
-                              'Ensure the inside of the cup and grounds\nare clearly visible for accurate reading.',
+                              'Fincanın içinin ve telvelerin doğru yorumlanabilmesi için\nnet olarak göründüğünden emin olun.',
                               textAlign: TextAlign.center,
                               style: AppTextStyles.cardDescription.copyWith(
                                 fontSize: 13,
-                                color: AppColors.textHint,
+                                color: colors.textMuted,
                               ),
                             ),
                           ),
@@ -296,10 +303,10 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
         return Row(
           children: [
             Text(
-              'Preview:',
+              'Önizleme:',
               style: AppTextStyles.bodyMedium.copyWith(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: colors.textSub,
               ),
             ),
             const SizedBox(width: 12),
@@ -338,7 +345,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                 height: 52,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: AppColors.surface.withValues(alpha: 0.5),
+                  color: colors.surfaceColor.withValues(alpha: 0.5),
                   border: Border.all(
                     color: AppColors.primary.withValues(alpha: 0.3),
                     width: 1,
@@ -346,7 +353,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                 ),
                 child: Icon(
                   Icons.add,
-                  color: AppColors.textSecondary.withValues(alpha: 0.7),
+                  color: colors.textSub.withValues(alpha: 0.7),
                   size: 24,
                 ),
               ),
@@ -364,14 +371,14 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
         // Kamera butonu
         _buildPickerButton(
           icon: Icons.camera_alt_outlined,
-          label: 'Take Photo',
+          label: 'Kamera',
           onTap: () => _pickImage(ImageSource.camera),
         ),
         const SizedBox(height: 10),
         // Galeri butonu
         _buildPickerButton(
           icon: Icons.photo_library_outlined,
-          label: 'Gallery',
+          label: 'Galeri',
           onTap: () => _pickImage(ImageSource.gallery),
         ),
       ],
@@ -390,7 +397,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
         height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.5),
+          color: colors.surfaceColor.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.3),
@@ -407,7 +414,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color: colors.textMain,
               ),
             ),
           ],
@@ -434,7 +441,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
             decoration: BoxDecoration(
               color: isSelected
                   ? AppColors.primary
-                  : AppColors.surface.withValues(alpha: 0.6),
+                  : colors.surfaceColor.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isSelected
@@ -458,7 +465,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                 Icon(
                   icon,
                   size: 16,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                  color: isSelected ? Colors.white : colors.textSub,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -466,7 +473,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : colors.textSub,
                   ),
                 ),
               ],
@@ -531,7 +538,7 @@ class _FortuneUploadViewState extends State<_FortuneUploadView> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Analyze Fortune',
+                          'Falı Yorumla',
                           style: AppTextStyles.buttonPrimary,
                         ),
                       ],

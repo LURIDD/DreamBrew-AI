@@ -7,17 +7,21 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/local_storage/saved_reading.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../history/presentation/bloc/history_bloc.dart';
 import '../../domain/entities/fortune_reading.dart';
 import '../../../visualization/presentation/cubit/visualization_cubit.dart';
+import '../../../visualization/presentation/cubit/visualization_state.dart';
 import '../../../visualization/presentation/widgets/visualization_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,19 +40,24 @@ class FortuneResultPage extends StatefulWidget {
 
 class _FortuneResultPageState extends State<FortuneResultPage> {
   bool _isSaved = false;
+  late ThemedColors colors;
+  /// Üretilen görselin Base64 verisi (kaydetme anında kullanılır)
+  String? _generatedImageBase64;
 
   FortuneReading get reading => widget.reading;
 
   @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: colors.textMain),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -63,7 +72,15 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
       ),
       body: BlocProvider(
         create: (_) => sl<VisualizationCubit>(),
-        child: SingleChildScrollView(
+        child: BlocListener<VisualizationCubit, VisualizationState>(
+          listener: (context, state) {
+            if (state is VisualizationLoaded) {
+              setState(() {
+                _generatedImageBase64 = state.imageBase64;
+              });
+            }
+          },
+          child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,10 +98,9 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
               icon: Icons.auto_awesome,
               title: 'Genel Yorum',
               message: reading.generalMessage,
-              gradientColors: [
-                const Color(0xFF2D1B69),
-                const Color(0xFF1A0E3F),
-              ],
+              gradientColors: Theme.of(context).brightness == Brightness.dark
+                  ? [const Color(0xFF2D1B69), const Color(0xFF1A0E3F)]
+                  : [const Color(0xFFEDE7FA), const Color(0xFFE0D5F5)],
             ),
             const SizedBox(height: 16),
 
@@ -93,10 +109,9 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
               icon: Icons.favorite,
               title: 'Aşk & İlişkiler',
               message: reading.loveMessage,
-              gradientColors: [
-                const Color(0xFF4A1942),
-                const Color(0xFF2D1040),
-              ],
+              gradientColors: Theme.of(context).brightness == Brightness.dark
+                  ? [const Color(0xFF4A1942), const Color(0xFF2D1040)]
+                  : [const Color(0xFFFCE4EC), const Color(0xFFF8BBD0)],
             ),
             const SizedBox(height: 16),
 
@@ -105,10 +120,9 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
               icon: Icons.work_rounded,
               title: 'Kariyer & İş',
               message: reading.careerMessage,
-              gradientColors: [
-                const Color(0xFF1A3A2D),
-                const Color(0xFF0E2A1F),
-              ],
+              gradientColors: Theme.of(context).brightness == Brightness.dark
+                  ? [const Color(0xFF1A3A2D), const Color(0xFF0E2A1F)]
+                  : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
             ),
             const SizedBox(height: 24),
 
@@ -127,16 +141,27 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             // AI Visualization Görünümü
             const VisualizationView(),
 
-            // "Falı Görselleştir" butonu
+            // "Falı Görselleştir" butonu — görsel üretildiyse gizle
             Builder(
-              builder: (context) => _buildGenerateButton(context),
+              builder: (context) {
+                final vizState = context.watch<VisualizationCubit>().state;
+                if (vizState is VisualizationLoaded) {
+                  return const SizedBox.shrink(); // Görsel varsa butonu gizle
+                }
+                return _buildGenerateButton(context);
+              },
             ),
             const SizedBox(height: 14),
 
             // Aksiyon butonları
             _buildActionRow(),
+            const SizedBox(height: 24),
+
+            // Ana Sayfaya Dön Butonu
+            Center(child: _buildHomeButton(context)),
           ],
         ),
+      ),
       ),
       ),
     );
@@ -148,10 +173,10 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF3D1A00), Color(0xFF1A0A00)],
+          colors: [colors.fortuneStart, colors.fortuneEnd],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -187,7 +212,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             style: GoogleFonts.cinzel(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: colors.textMain,
               letterSpacing: 0.5,
             ),
           ),
@@ -244,7 +269,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textHint,
+            color: colors.textMuted,
           ),
         ),
         const SizedBox(height: 12),
@@ -262,7 +287,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.fortuneCardStart.withValues(alpha: 0.6),
+                  color: colors.fortuneStart.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.secondary.withValues(alpha: 0.3),
@@ -278,7 +303,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
                       symbol.name,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: colors.textSub,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -342,7 +367,9 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.06),
           width: 1,
         ),
       ),
@@ -359,7 +386,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: colors.textMain,
                 ),
               ),
             ],
@@ -371,7 +398,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             message,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: colors.textSub,
               height: 1.7,
             ),
           ),
@@ -417,7 +444,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: colors.surfaceColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
@@ -429,7 +456,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             label,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: AppColors.textHint,
+              color: colors.textMuted,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.5,
             ),
@@ -460,7 +487,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textHint,
+            color: colors.textMuted,
           ),
         ),
         const SizedBox(height: 10),
@@ -504,7 +531,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textHint,
+            color: colors.textMuted,
           ),
         ),
         const SizedBox(height: 12),
@@ -541,7 +568,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
                     entry.value,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                       height: 1.6,
                     ),
                   ),
@@ -558,8 +585,17 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
   Widget _buildGenerateButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Free Tier kontrolü
+        final isFreeTier = dotenv.env['IS_FREE_TIER']?.toLowerCase() == 'true';
+        if (isFreeTier) {
+          _showFreeTierDialog(context);
+          return;
+        }
         final keywords = reading.symbols.map((e) => e.name).toList();
-        context.read<VisualizationCubit>().generateImage(keywords);
+        context.read<VisualizationCubit>().generateImage(
+          keywords,
+          readingId: _isSaved ? reading.id : null,
+        );
       },
       child: Container(
         height: 56,
@@ -591,19 +627,66 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
     );
   }
 
+  /// "Ana Sayfaya Dön" butonu
+  Widget _buildHomeButton(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        context.go(AppRouter.home);
+      },
+      child: Text(
+        'Ana Sayfaya Dön',
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: colors.textMuted,
+        ),
+      ),
+    );
+  }
+
   // ─── Save İşlemi ─────────────────────────────────────────────
 
   /// FortuneReading → SavedReading dönüşümü yaparak Hive'a kaydeder.
+  /// Tüm yorum alanlarını birleştirerek detaylı içerik oluşturur.
+  /// Eğer görsel üretilmişse onu da kaydeder.
   void _handleSave() {
     if (_isSaved) return;
+
+    // Tüm mesajları birleştirerek zengin içerik oluştur
+    final buffer = StringBuffer();
+    buffer.writeln('✦ Genel Yorum');
+    buffer.writeln(reading.generalMessage);
+    buffer.writeln();
+    buffer.writeln('♥ Aşk & İlişkiler');
+    buffer.writeln(reading.loveMessage);
+    buffer.writeln();
+    buffer.writeln('💼 Kariyer & İş');
+    buffer.writeln(reading.careerMessage);
+
+    if (reading.suggestions.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎯 Öneriler');
+      for (int i = 0; i < reading.suggestions.length; i++) {
+        buffer.writeln('${i + 1}. ${reading.suggestions[i]}');
+      }
+    }
+
+    if (reading.themes.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎨 Temalar: ${reading.themes.map((t) => '#$t').join(' ')}');
+    }
+
+    buffer.writeln('⏳ Zaman: ${reading.timeframe}');
+    buffer.writeln('🔢 Şans Sayısı: ${reading.luckyNumber} | 🎨 Şans Rengi: ${reading.luckyColor}');
 
     final savedReading = SavedReading(
       id: reading.id,
       type: SavedReadingType.fortune,
       date: reading.readingDate,
       title: 'Fincanınız Konuşuyor',
-      content: reading.generalMessage,
+      content: buffer.toString().trim(),
       symbols: reading.symbols.map((s) => s.name).toList(),
+      imageBase64: _generatedImageBase64,
     );
 
     sl<HistoryBloc>().add(SaveReadingEvent(reading: savedReading));
@@ -612,7 +695,88 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
     SnackbarHelper.showSuccess(context, 'Kahve falı kaydedildi ☕');
   }
 
-  /// Save & Share buton satırı
+  /// Fal yorumunu cihazın paylaşım menüsüyle paylaşır.
+  void _handleShare() {
+    final buffer = StringBuffer();
+    buffer.writeln('☕ DreamBrew AI — Kahve Falı Yorumum');
+    buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━');
+    buffer.writeln();
+    buffer.writeln('✦ Genel Yorum');
+    buffer.writeln(reading.generalMessage);
+    buffer.writeln();
+    buffer.writeln('♥ Aşk & İlişkiler');
+    buffer.writeln(reading.loveMessage);
+    buffer.writeln();
+    buffer.writeln('💼 Kariyer & İş');
+    buffer.writeln(reading.careerMessage);
+
+    if (reading.suggestions.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎯 Öneriler');
+      for (int i = 0; i < reading.suggestions.length; i++) {
+        buffer.writeln('${i + 1}. ${reading.suggestions[i]}');
+      }
+    }
+
+    buffer.writeln();
+    buffer.writeln('🔢 Şans: ${reading.luckyNumber} | 🎨 Renk: ${reading.luckyColor}');
+    buffer.writeln();
+    buffer.writeln('— DreamBrew AI ile oluşturuldu ✨');
+
+    SharePlus.instance.share(
+      ShareParams(text: buffer.toString().trim()),
+    );
+  }
+
+  /// Free Tier kullanıcılarına görsel üretiminin kullanılamadığını bildirir.
+  void _showFreeTierDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.secondary, size: 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Yakında Sizlerle! 🌠',
+                style: GoogleFonts.cinzel(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryLight,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Görsel üretim özelliği şu anda geliştirme aşamasındadır.\n\n'
+          'Premium sürümle birlikte yapay zeka destekli '
+          'mistik görseller oluşturabileceksiniz.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: colors.textSub,
+            height: 1.6,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Anladım',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryLight,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildActionRow() {
     return Row(
       children: [
@@ -631,12 +795,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
           child: _actionButton(
             icon: Icons.ios_share,
             label: 'Paylaş',
-            onTap: () {
-              SnackbarHelper.showInfo(
-                context,
-                'Paylaşım özelliği yakında aktif olacak!',
-              );
-            },
+            onTap: _handleShare,
           ),
         ),
       ],
@@ -657,7 +816,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.secondary.withValues(alpha: 0.15)
-              : AppColors.surface.withValues(alpha: 0.6),
+              : colors.surfaceColor.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isActive
@@ -672,7 +831,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
             Icon(
               icon,
               size: 18,
-              color: isActive ? AppColors.secondaryLight : AppColors.textSecondary,
+              color: isActive ? AppColors.secondaryLight : colors.textSub,
             ),
             const SizedBox(width: 8),
             Text(
@@ -682,7 +841,7 @@ class _FortuneResultPageState extends State<FortuneResultPage> {
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 color: isActive
                     ? AppColors.secondaryLight
-                    : AppColors.textSecondary,
+                    : colors.textSub,
               ),
             ),
           ],

@@ -43,16 +43,23 @@ class FeatureCard extends StatelessWidget {
   });
 
   /// Rüya Yorumu kartı için hazır fabrika constructor
-  factory FeatureCard.dream({Key? key, VoidCallback? onTap}) {
+  factory FeatureCard.dream({Key? key, VoidCallback? onTap, BuildContext? context}) {
+    final colors = context != null ? AppColors.of(context) : null;
     return FeatureCard(
       key: key,
       iconData: Icons.nightlight_round,
       iconBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
       iconColor: AppColors.primaryLight,
-      title: 'Interpret Dream',
-      description: 'Uncover the hidden messages\nin your subconscious',
-      buttonLabel: 'Start Interpretation',
-      gradient: AppColors.dreamCardGradient,
+      title: 'Rüya Yorumu',
+      description: 'Bilinçaltının sana gönderdiği gizli\nmesajları keşfet',
+      buttonLabel: 'Yorumlamaya Başla',
+      gradient: colors != null
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [colors.dreamStart, colors.dreamEnd],
+            )
+          : AppColors.dreamCardGradient,
       buttonGradientStart: AppColors.primary,
       buttonGradientEnd: AppColors.primaryLight,
       onTap: onTap,
@@ -60,16 +67,23 @@ class FeatureCard extends StatelessWidget {
   }
 
   /// Kahve Falı kartı için hazır fabrika constructor
-  factory FeatureCard.fortune({Key? key, VoidCallback? onTap}) {
+  factory FeatureCard.fortune({Key? key, VoidCallback? onTap, BuildContext? context}) {
+    final colors = context != null ? AppColors.of(context) : null;
     return FeatureCard(
       key: key,
       iconData: Icons.coffee,
       iconBackgroundColor: AppColors.secondary.withValues(alpha: 0.3),
       iconColor: AppColors.secondary,
-      title: 'Analyze Cup',
-      description: 'Read your fortune from your\ncoffee grounds',
-      buttonLabel: 'Read Fortune',
-      gradient: AppColors.fortuneCardGradient,
+      title: 'Kahve Falı',
+      description: 'Kahve telvelerinden geleceğini\noku',
+      buttonLabel: 'Falı Oku',
+      gradient: colors != null
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [colors.fortuneStart, colors.fortuneEnd],
+            )
+          : AppColors.fortuneCardGradient,
       buttonSolidColor: AppColors.secondary,
       onTap: onTap,
     );
@@ -110,11 +124,19 @@ class FeatureCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Başlık
-          Text(title, style: AppTextStyles.cardTitle),
+          Text(
+            title,
+            style: AppTextStyles.cardTitle.copyWith(
+                color: AppColors.of(context).textMain),
+          ),
           const SizedBox(height: 6),
 
           // Açıklama
-          Text(description, style: AppTextStyles.cardDescription),
+          Text(
+            description,
+            style: AppTextStyles.cardDescription.copyWith(
+                color: AppColors.of(context).textSub),
+          ),
           const SizedBox(height: 20),
 
           // CTA Butonu

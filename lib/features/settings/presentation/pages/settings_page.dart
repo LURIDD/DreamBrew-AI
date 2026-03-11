@@ -1,7 +1,7 @@
 /// DreamBrew AI — Ayarlar Sayfası
 ///
 /// Uygulama ayarları, veri yönetimi ve yasal bilgileri içerir.
-/// Mevcut karanlık mistik tema ile uyumlu tasarım.
+/// Tema değişimine duyarlı — AppColors.of(context) kullanır.
 library;
 
 import 'package:flutter/material.dart';
@@ -32,20 +32,22 @@ class _SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
         title: Text(
-          'Settings',
+          'Ayarlar',
           style: GoogleFonts.cinzel(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: colors.textMain,
             letterSpacing: 1.0,
           ),
         ),
@@ -56,25 +58,25 @@ class _SettingsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ─── Veri Yönetimi Bölümü ──────────────────────────
-            _buildSectionHeader('VERİ YÖNETİMİ'),
+            _buildSectionHeader('VERİ YÖNETİMİ', colors),
             const SizedBox(height: 12),
-            _buildClearDataTile(context),
+            _buildClearDataTile(context, colors),
             const SizedBox(height: 32),
 
             // ─── Görünüm Bölümü ────────────────────────────────
-            _buildSectionHeader('GÖRÜNÜM'),
+            _buildSectionHeader('GÖRÜNÜM', colors),
             const SizedBox(height: 12),
-            _buildThemeToggleTile(context),
+            _buildThemeToggleTile(context, colors),
             const SizedBox(height: 32),
 
             // ─── Hakkında Bölümü ───────────────────────────────
-            _buildSectionHeader('HAKKINDA'),
+            _buildSectionHeader('HAKKINDA', colors),
             const SizedBox(height: 12),
-            _buildAboutCard(),
+            _buildAboutCard(colors),
             const SizedBox(height: 20),
 
             // ─── Yasal Uyarı / Feragatname ─────────────────────
-            _buildDisclaimerCard(),
+            _buildDisclaimerCard(colors),
             const SizedBox(height: 32),
 
             // ─── Versiyon Bilgisi ──────────────────────────────
@@ -83,7 +85,7 @@ class _SettingsView extends StatelessWidget {
                 'DreamBrew AI v1.0.0',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppColors.textHint.withValues(alpha: 0.6),
+                  color: colors.textMuted.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -98,14 +100,14 @@ class _SettingsView extends StatelessWidget {
   // Bölüm Başlığı
   // ============================================================
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, ThemedColors colors) {
     return Text(
       title,
       style: AppTextStyles.bodySmall.copyWith(
         letterSpacing: 2,
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: AppColors.textHint,
+        color: colors.textMuted,
       ),
     );
   }
@@ -114,22 +116,23 @@ class _SettingsView extends StatelessWidget {
   // Verileri Temizle
   // ============================================================
 
-  Widget _buildClearDataTile(BuildContext context) {
+  Widget _buildClearDataTile(BuildContext context, ThemedColors colors) {
     return _SettingsTile(
       icon: Icons.delete_outline,
       iconColor: const Color(0xFFEF5350),
       title: 'Tüm Verileri Temizle',
       subtitle: 'Kayıtlı tüm rüya ve fal okumalarını sil',
-      onTap: () => _showClearDataDialog(context),
+      onTap: () => _showClearDataDialog(context, colors),
+      colors: colors,
     );
   }
 
-  void _showClearDataDialog(BuildContext context) {
+  void _showClearDataDialog(BuildContext context, ThemedColors colors) {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: colors.surfaceColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -144,7 +147,7 @@ class _SettingsView extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: colors.textMain,
                   ),
                 ),
               ),
@@ -157,7 +160,7 @@ class _SettingsView extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
+              color: colors.textSub,
               height: 1.5,
             ),
           ),
@@ -169,7 +172,7 @@ class _SettingsView extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textHint,
+                  color: colors.textMuted,
                 ),
               ),
             ),
@@ -209,14 +212,14 @@ class _SettingsView extends StatelessWidget {
   // Tema Anahtarı
   // ============================================================
 
-  Widget _buildThemeToggleTile(BuildContext context) {
+  Widget _buildThemeToggleTile(BuildContext context, ThemedColors colors) {
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, themeMode) {
         final isDarkMode = themeMode == ThemeMode.dark;
         return _SettingsTile(
-          icon: Icons.dark_mode_outlined,
+          icon: isDarkMode ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
           iconColor: AppColors.primaryLight,
-          title: 'Karanlık Tema',
+          title: isDarkMode ? 'Karanlık Tema' : 'Aydınlık Tema',
           subtitle: 'Açık / Koyu Tema Seçimi',
           trailing: Switch(
             value: isDarkMode,
@@ -225,9 +228,10 @@ class _SettingsView extends StatelessWidget {
             },
             activeThumbColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
-            inactiveThumbColor: AppColors.textHint,
-            inactiveTrackColor: AppColors.textHint.withValues(alpha: 0.2),
+            inactiveThumbColor: colors.textMuted,
+            inactiveTrackColor: colors.textMuted.withValues(alpha: 0.2),
           ),
+          colors: colors,
         );
       },
     );
@@ -237,15 +241,15 @@ class _SettingsView extends StatelessWidget {
   // Hakkında Kartı
   // ============================================================
 
-  Widget _buildAboutCard() {
+  Widget _buildAboutCard(ThemedColors colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF2D1B69), Color(0xFF1A0E3F)],
+          colors: [colors.dreamStart, colors.dreamEnd],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
@@ -282,7 +286,7 @@ class _SettingsView extends StatelessWidget {
             'Gemini AI teknolojisi ile güçlendirilmiştir.',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: colors.textSub,
               height: 1.6,
             ),
           ),
@@ -295,12 +299,12 @@ class _SettingsView extends StatelessWidget {
   // Yasal Uyarı / Feragatname
   // ============================================================
 
-  Widget _buildDisclaimerCard() {
+  Widget _buildDisclaimerCard(ThemedColors colors) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: colors.surfaceColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.secondary.withValues(alpha: 0.15),
@@ -323,7 +327,7 @@ class _SettingsView extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: colors.textMain,
                 ),
               ),
             ],
@@ -341,7 +345,7 @@ class _SettingsView extends StatelessWidget {
             'Uygulamayı kullanarak bu feragatnameyi kabul etmiş sayılırsınız.',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: AppColors.textHint,
+              color: colors.textMuted,
               height: 1.7,
             ),
           ),
@@ -363,12 +367,14 @@ class _SettingsTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final Widget? trailing;
+  final ThemedColors colors;
 
   const _SettingsTile({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    required this.colors,
     this.onTap,
     this.trailing,
   });
@@ -381,7 +387,7 @@ class _SettingsTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.5),
+          color: colors.surfaceColor.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.1),
@@ -412,7 +418,7 @@ class _SettingsTile extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: colors.textMain,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -421,7 +427,7 @@ class _SettingsTile extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.textHint,
+                      color: colors.textMuted,
                     ),
                   ),
                 ],
@@ -434,7 +440,7 @@ class _SettingsTile extends StatelessWidget {
             else
               Icon(
                 Icons.chevron_right,
-                color: AppColors.textHint.withValues(alpha: 0.5),
+                color: colors.textMuted.withValues(alpha: 0.5),
                 size: 22,
               ),
           ],

@@ -54,10 +54,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     // Sabah: 05:00 - 11:59 | Öğleden sonra: 12:00 - 17:59
     // Akşam: 18:00 - 23:59 | Gece: 00:00 - 04:59
     final greeting = switch (hour) {
-      >= 5 && < 12 => 'Good Morning',
-      >= 12 && < 18 => 'Good Afternoon',
-      >= 18 && < 24 => 'Good Evening',
-      _ => 'Good Night',
+      >= 5 && < 12 => 'Günaydın',
+      >= 12 && < 18 => 'İyi Günler',
+      >= 18 && < 24 => 'İyi Akşamlar',
+      _ => 'İyi Geceler',
     };
 
     emit(HomeLoaded(greeting: greeting));

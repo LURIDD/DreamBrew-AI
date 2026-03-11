@@ -6,10 +6,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/local_storage/saved_reading.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/snackbar_helper.dart';
@@ -35,19 +38,22 @@ class DreamResultPage extends StatefulWidget {
 
 class _DreamResultPageState extends State<DreamResultPage> {
   bool _isSaved = false;
+  late ThemedColors colors;
 
   DreamReading get reading => widget.reading;
 
   @override
   Widget build(BuildContext context) {
+    colors = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: colors.bg,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: colors.textMain),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -90,6 +96,10 @@ class _DreamResultPageState extends State<DreamResultPage> {
 
             // Save & Share satırı
             _buildActionRow(),
+            const SizedBox(height: 24),
+
+            // Ana Sayfaya Dön Butonu
+            Center(child: _buildHomeButton(context)),
           ],
         ),
       ),
@@ -103,10 +113,10 @@ class _DreamResultPageState extends State<DreamResultPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF2D1B69), Color(0xFF1A0E3F)],
+          colors: [colors.dreamStart, colors.dreamEnd],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -134,7 +144,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
             style: GoogleFonts.cinzel(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: colors.textMain,
               letterSpacing: 0.5,
             ),
           ),
@@ -163,7 +173,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.5),
+        color: colors.surfaceColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.15),
@@ -208,7 +218,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
               text: buffer.toString(),
               style: GoogleFonts.inter(
                 fontSize: 15,
-                color: AppColors.textSecondary,
+                color: colors.textSub,
                 height: 1.7,
               ),
             ),
@@ -238,7 +248,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
           text: buffer.toString(),
           style: GoogleFonts.inter(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: colors.textSub,
             height: 1.7,
           ),
         ),
@@ -279,7 +289,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
             letterSpacing: 2,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textHint,
+            color: colors.textMuted,
           ),
         ),
         const SizedBox(height: 12),
@@ -292,7 +302,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.6),
+                color: colors.surfaceColor.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.3),
@@ -308,7 +318,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
                     '#${symbol.symbol}',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: colors.textSub,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -325,6 +335,12 @@ class _DreamResultPageState extends State<DreamResultPage> {
   Widget _buildGenerateButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Free Tier kontrolü
+        final isFreeTier = dotenv.env['IS_FREE_TIER']?.toLowerCase() == 'true';
+        if (isFreeTier) {
+          _showFreeTierDialog(context);
+          return;
+        }
         final keywords = reading.symbols.map((e) => e.symbol).toList();
         context.read<VisualizationCubit>().generateImage(keywords);
       },
@@ -347,8 +363,25 @@ class _DreamResultPageState extends State<DreamResultPage> {
           children: [
             const Icon(Icons.edit, color: Colors.white, size: 20),
             const SizedBox(width: 10),
-            Text('Generate Dream Image', style: AppTextStyles.buttonPrimary),
+            Text('Rüyayı Görselleştir', style: AppTextStyles.buttonPrimary),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// "Ana Sayfaya Dön" butonu
+  Widget _buildHomeButton(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        context.go(AppRouter.home);
+      },
+      child: Text(
+        'Ana Sayfaya Dön',
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: colors.textMuted,
         ),
       ),
     );
@@ -357,15 +390,44 @@ class _DreamResultPageState extends State<DreamResultPage> {
   // ─── Save İşlemi ─────────────────────────────────────────────
 
   /// DreamReading → SavedReading dönüşümü yaparak Hive'a kaydeder.
+  /// Tüm yorum alanlarını birleştirerek detaylı içerik oluşturur.
   void _handleSave() {
     if (_isSaved) return;
+
+    // Tüm mesajları birleştirerek zengin içerik oluştur
+    final buffer = StringBuffer();
+    buffer.writeln('✦ Genel Yorum');
+    buffer.writeln(reading.overallMessage);
+
+    if (reading.symbols.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🔮 Sembol Yorumları');
+      for (final symbol in reading.symbols) {
+        buffer.writeln('• ${symbol.symbol}: ${symbol.meaning}');
+      }
+    }
+
+    if (reading.suggestions.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎯 Öneriler');
+      for (int i = 0; i < reading.suggestions.length; i++) {
+        buffer.writeln('${i + 1}. ${reading.suggestions[i]}');
+      }
+    }
+
+    if (reading.themes.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎨 Temalar: ${reading.themes.map((t) => '#$t').join(' ')}');
+    }
+
+    buffer.writeln('🌙 Duygusal Ton: ${reading.emotionalTone}');
 
     final savedReading = SavedReading(
       id: reading.id,
       type: SavedReadingType.dream,
       date: reading.interpretedAt,
       title: _generateTitle(),
-      content: reading.overallMessage,
+      content: buffer.toString().trim(),
       symbols: reading.symbols.map((s) => s.symbol).toList(),
     );
 
@@ -383,7 +445,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
         Expanded(
           child: _actionButton(
             icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
-            label: _isSaved ? 'Saved ✓' : 'Save',
+            label: _isSaved ? 'Kaydedildi ✓' : 'Kaydet',
             onTap: _handleSave,
             isActive: _isSaved,
           ),
@@ -393,16 +455,96 @@ class _DreamResultPageState extends State<DreamResultPage> {
         Expanded(
           child: _actionButton(
             icon: Icons.ios_share,
-            label: 'Share',
-            onTap: () {
-              SnackbarHelper.showInfo(
-                context,
-                'Paylaşım özelliği yakında aktif olacak!',
-              );
-            },
+            label: 'Paylaş',
+            onTap: _handleShare,
           ),
         ),
       ],
+    );
+  }
+
+  /// Rüya yorumunu cihazın paylaşım menüsüyle paylaşır.
+  void _handleShare() {
+    final buffer = StringBuffer();
+    buffer.writeln('✨ DreamBrew AI — Rüya Yorumum');
+    buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━');
+    buffer.writeln();
+    buffer.writeln('✦ Genel Yorum');
+    buffer.writeln(reading.overallMessage);
+
+    if (reading.symbols.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🔮 Semboller');
+      for (final symbol in reading.symbols) {
+        buffer.writeln('• ${symbol.symbol}: ${symbol.meaning}');
+      }
+    }
+
+    if (reading.suggestions.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('🎯 Öneriler');
+      for (int i = 0; i < reading.suggestions.length; i++) {
+        buffer.writeln('${i + 1}. ${reading.suggestions[i]}');
+      }
+    }
+
+    buffer.writeln();
+    buffer.writeln('🌙 Duygusal Ton: ${reading.emotionalTone}');
+    buffer.writeln();
+    buffer.writeln('— DreamBrew AI ile oluşturuldu ✨');
+
+    SharePlus.instance.share(
+      ShareParams(text: buffer.toString().trim()),
+    );
+  }
+
+  /// Free Tier kullanıcılarına görsel üretiminin kullanılamadığını bildirir.
+  void _showFreeTierDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.secondary, size: 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Yakında Sizlerle! 🌠',
+                style: GoogleFonts.cinzel(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryLight,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Görsel üretim özelliği şu anda geliştirme aşamasındadır.\n\n'
+          'Premium sürümle birlikte yapay zeka destekli '
+          'mistik görseller oluşturabileceksiniz.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: colors.textSub,
+            height: 1.6,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Anladım',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryLight,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -420,7 +562,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.primary.withValues(alpha: 0.2)
-              : AppColors.surface.withValues(alpha: 0.6),
+              : colors.surfaceColor.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isActive
@@ -435,7 +577,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
             Icon(
               icon,
               size: 18,
-              color: isActive ? AppColors.primaryLight : AppColors.textSecondary,
+              color: isActive ? AppColors.primaryLight : colors.textSub,
             ),
             const SizedBox(width: 8),
             Text(
@@ -445,7 +587,7 @@ class _DreamResultPageState extends State<DreamResultPage> {
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 color: isActive
                     ? AppColors.primaryLight
-                    : AppColors.textSecondary,
+                    : colors.textSub,
               ),
             ),
           ],
